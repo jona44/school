@@ -1,0 +1,19 @@
+{% extends "partials/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container mt-5">
+     <div class="col-md-8 border shadow p-3">
+
+    <div class="alert alert-info">
+        <strong>Info!</strong> Assign a school to this school admin.
+     </div>
+    <h1>Assign School</h1>
+    <form method="post">
+    {% csrf_token %}
+    {{ form|crispy }}
+    <button type="submit"class="btn btn-dark">Assign School</button>
+ </form>
+</div>
+ 
+{% endblock %}

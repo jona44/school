@@ -9,8 +9,11 @@ db.sqlite3
 #media
 profile_pics
 db.sqlite3-journal
+db.sqlite3-journal
+dbCopy.sqlite3
 snippets
 db.sqlite3
+db-.sqlite3
 staticfiles
 ### Linux ###
 *~
