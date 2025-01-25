@@ -1,8 +1,8 @@
 from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
 from customadmin.models import CustomUser
-from customsettings.models import AcademicCalendar
-from district.models import SchoolAdminProfile
+from customsettings.models import AcademicCalendar,SchoolAdminProfile
+
 from teacher.models import TeacherProfile
 from .forms import *
 from .models import   *

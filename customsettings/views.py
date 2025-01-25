@@ -5,10 +5,60 @@ from student.models import ClassRoom
 from teacher.models import TeacherProfile
 from .forms import *
 from .models import *
-from district.models import AcademicCalendar, SchoolAdminProfile
+from district.models import AcademicCalendar
 from django.contrib.auth.decorators import login_required, user_passes_test
 from .decorators import filter_by_school 
 
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser or u.user_type == 'District_admin')
+def assign_schoolAdmin(request, user_id):
+    """
+    View to create a SchoolAdmin for a given CustomUser.
+    """
+    user = CustomUser.objects.get(pk=user_id)
+
+    if request.method == 'POST':
+        form = AssignSchoolAdminForm(request.POST)
+        if form.is_valid():
+            profile = form.save(commit=False)
+            profile.school_admin = user  # Assign the CustomUser to the profile
+            profile.save()
+            messages.success(request, 'SchoolAdmin  created successfully.')
+            return redirect('schoolAdmin_profile_detail',profile_id=profile.id)  # Redirect to profile details
+    else:
+        form = AssignSchoolAdminForm()
+
+    context = {
+        'form': form,
+        'user': user,
+    }
+    return render(request, 'Customsettings/assign_schoolAdmin.html', context)
+
+
+#-------------------------------admin_profile----------------------------------------
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser or u.user_type == 'district_admin')
+def admin_profile(request, pk):
+    user = get_object_or_404(CustomUser, pk=pk)
+    profile = get_object_or_404(SchoolAdminProfile, user=user)
+    return render(request, 'district/admin_profile.html', {'profile': profile})
+
+
+#---------------------------schoolAdmin_profile_detail-------------------------------------
+
+
+from django.shortcuts import get_object_or_404
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser or u.user_type == 'district_admin')
+def schoolAdmin_profile_detail(request, profile_id):
+    """Displays the details of a SchoolAdminProfile."""
+    profile = get_object_or_404(SchoolAdminProfile, id=profile_id)
+   
+    return render(request, 'customsettings/schoolAdmin_profile_detail.html', {'profile': profile})
 
 
 @login_required
@@ -324,3 +374,28 @@ def teacher_list(request):
         'base_subject': SchoolSubject.objects.all(),
     }
     return render(request, 'customsettings/teacher_list.html', context)
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser or u.user_type == 'District_admin')
+def schoolAdmin_profile(request, profile_id):
+    """
+    View to update a SchoolAdminProfile for a given CustomUser.
+    """
+    profile = get_object_or_404(SchoolAdminProfile, pk=profile_id)
+    user = profile.school_admin
+
+    if request.method == 'POST':
+        form = SchoolAdminProfileForm(request.POST, instance=profile)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'SchoolAdmin Profile updated successfully.')
+            return redirect('schoolAdmin_profile_detail', profile_id=profile.id)  # Redirect to profile details
+    else:
+        form = SchoolAdminProfileForm(instance=profile)
+
+    context = {
+        'form': form,
+        'user': user,
+    }
+    return render(request, 'Customsettings/update_schoolAdmin_profile.html', context)

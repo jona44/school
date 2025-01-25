@@ -1,17 +1,34 @@
 from django.db import models
-from district.models import District_School_Registration,GradeLevel,AcademicCalendar,Subjects,SchoolAdminProfile
+from customadmin.models import CustomUser
+from district.models import District_School_Registration,GradeLevel,AcademicCalendar,Subjects
 from django.utils.translation import gettext_lazy as _
 
+class SchoolAdminProfile(models.Model):
+    school_admin      = models.OneToOneField(CustomUser, on_delete=models.CASCADE, blank=True, null=True)
+    contact_number    = models.CharField(max_length=255, blank=True, null=True)
+    email             = models.EmailField(blank=True, null=True)
+    school            = models.ForeignKey(District_School_Registration, on_delete=models.CASCADE, blank=True, null=True)
+    admin             = models.CharField(max_length=10, choices=[('admin1', 'admin1'), ('admin2', 'admin2'), ('admin3', 'admin3')], null=True, blank=True)
+    address           = models.CharField(max_length=255, blank=True, null=True)
+    date_of_birth     = models.DateField(blank=True, null=True)
+    profile_picture   = models.ImageField(upload_to='admin_profiles/', blank=True, null=True)
+    date_created      = models.DateTimeField(auto_now_add=True)
+    last_updated      = models.DateTimeField(auto_now=True)
+    is_complete       = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f'{self.school_admin}'
 
 class SchoolProfile(models.Model): 
-    school_admin =models.ForeignKey(District_School_Registration, on_delete=models.CASCADE, blank=True, null=True,related_name='schooladmin')   
-    school       = models.OneToOneField(District_School_Registration, on_delete=models.CASCADE, blank=True, null=True)
+    school_admin =models.ForeignKey(SchoolAdminProfile, on_delete=models.CASCADE, blank=True, null=True,related_name='schooladmin')   
+    school       = models.OneToOneField(SchoolAdminProfile, on_delete=models.CASCADE, blank=True, null=True)
     school_logo  = models.ImageField(upload_to='school_logos/', blank=True, null=True)
     school_subjects   = models.ManyToManyField('SchoolSubject')
     is_setup_complete = models.BooleanField(default=False)
 
     def __str__(self):
        return f'{self.school}'
+   
 
     
     

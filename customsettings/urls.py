@@ -14,5 +14,9 @@ urlpatterns = [
     path('edit_schoolsubjects/<int:pk>/', views.edit_schoolsubjects, name='edit_schoolsubjects'),
     path('all_classes/', views.all_classes,name='all_classes'),
     path('teacher_list/',views.teacher_list, name='teacher_list'),
-   
+    
+    path('assign_schoolAdmin/<int:user_id>/', views.assign_schoolAdmin, name='assign_schoolAdmin'),
+    
+    path('schoolAdmin_profile_detail/<int:profile_id>/', views.schoolAdmin_profile_detail,name='schoolAdmin_profile_detail'),
+    path('schoolAdmin_profile/<int:profile_id>/', views.schoolAdmin_profile, name='schoolAdmin_profile'),  # New URL
 ]

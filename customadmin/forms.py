@@ -13,7 +13,7 @@ class CSVUploadForm(forms.Form):
 class UserRegistrationForm(UserCreationForm):
     class Meta:
         model = CustomUser
-        fields = ('email', 'first_name', 'last_name','user_type', 'position', 'password1', 'password2', )
+        fields = ('email', 'first_name', 'last_name','user_type', 'password1', 'password2')
         widgets = {
            'email': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -31,10 +31,7 @@ class UserRegistrationForm(UserCreationForm):
                 'class': 'form-control',
                
                 }),
-            'position': forms.Select(attrs={
-                'class': 'form-control',
-                
-                }),
+            
             'password1': forms.PasswordInput(attrs={
                 'class': 'form-control',  
                 }),

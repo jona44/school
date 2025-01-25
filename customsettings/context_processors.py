@@ -1,6 +1,7 @@
-from district.models import SchoolAdminProfile, SchoolHeadProfile
+from district.models import SchoolHeadProfile
 from teacher.models import TeacherProfile
 from student.models import StudentProfile
+from customsettings.models import SchoolAdminProfile
 
 def get_user_school_profile(user):
     try:

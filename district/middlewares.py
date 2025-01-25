@@ -1,7 +1,7 @@
 # middlewares.py in the 'District' app
 from django.utils.deprecation import MiddlewareMixin
 import logging
-from district.models import SchoolAdminProfile
+from customsettings.models import SchoolAdminProfile
 
 logger = logging.getLogger(__name__)
 

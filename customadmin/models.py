@@ -29,17 +29,12 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         ('district_admin', 'DISTRICT_ADMIN'),
     )
 
-    POSITION = (
-        ('admin', 'ADMIN'),
-        ('user', 'USER'),
-        ('staff', 'STAFF'),
-        ('student', 'STUDENT'),
-    )
+    # Removed POSITION attribute as it is no longer needed
 
     email       = models.EmailField(unique=True)
     first_name  = models.CharField(max_length=30)
     last_name   = models.CharField(max_length=30)
-    position    = models.CharField(max_length=30, choices=POSITION)
+   
     user_type   = models.CharField(max_length=30, choices=USER_TYPE)
     is_active   = models.BooleanField(default=True)
     is_staff    = models.BooleanField(default=False)

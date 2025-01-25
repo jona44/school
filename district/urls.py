@@ -14,7 +14,7 @@ urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view(template_name='account/logout.html'), name='logout'),
 
     # path('password_reset/',views.password_reset, name='password_reset'),
-    path('password-reset/',auth_views.PasswordResetView.as_view(template_name='district/password_reset.html' ), name='password_reset'),
+    path('password-reset/',auth_views.PasswordResetView.as_view(template_name='account/password_reset.html' ), name='password_reset'),
     path('password-reset/done/', auth_views.PasswordResetDoneView.as_view(template_name='district/password_reset_done.html'),name='password_reset_done'),
     path('password-reset-confirm/<uidb64>/<token>/',auth_views.PasswordResetConfirmView.as_view(template_name='district/password_reset_confirm.html'
          ),name='password_reset_confirm'),
@@ -27,16 +27,18 @@ urlpatterns = [
     path('create_school/', views.create_school, name='create_school'),
     path('create_district/', views.create_district, name='create_district'),
     path('subject/',views.create_subject,name='subject'),
-    path('registration/', views.registration,name='registration'),
+  
+    path('register_school_head/', views.register_school_head,name='register_school_head'),
+    path('register_school_admin/', views.register_school_admin,name='register_school_admin'),
+   
     
-    path('create_schoolAdmin_profile/<int:user_id>/', views.create_schoolAdmin_profile, name='create_schoolAdmin_profile'),
     
     path('create_districtAdmin_profile/<int:user_id>/', views.create_districtAdmin_profile,name='create_districtAdmin_profile'),
     path('create_schoolHead_profile/<int:user_id>/', views.create_schoolHead_profile, name='create_schoolHead_profile'),
-
-    path('schoolAdmin_profile_detail/<int:profile_id>/', views.schoolAdmin_profile_detail,name='schoolAdmin_profile_detail'),
-    path('districtAdmin_profile_detail/<int:profile_id>/', views.districtAdmin_profile_detail,name='districtAdmin_profile_detail'),
     path('schoolHead_profile_detail/<int:profile_id>/', views.schoolHead_profile_detail,name='schoolHead_profile_detail'),
+    path('assign_schoolHead/<int:user_id>/', views.assign_schoolHead, name='assign_schoolHead'),
+
+    path('districtAdmin_profile_detail/<int:profile_id>/', views.districtAdmin_profile_detail,name='districtAdmin_profile_detail'),
     path('create_academic_calendar/', views.create_academic_calendar, name='create_academic_calendar'),
     
     path('create_holidays/', calendar_views.create_holidays, name='create_holidays'),
@@ -48,7 +50,6 @@ urlpatterns = [
     path('academic-calendars/<int:pk>/edit/', calendar_views.academic_calendar_update, name='academic_calendar_update'),
     path('academic-calendars/<int:pk>/delete/', calendar_views.academic_calendar_delete, name='academic_calendar_delete'),
     
-    # path('academic_calendar/<int:pk>/update/', views.update_academic_calendar, name='update_academic_calendar'),
     path('academic_calendar/<int:academic_calendar_id>/', views.academic_calendar_details, name='academic_calendar_details'),
     path('grade_level/', views.grade_level, name='grade_level'),
     

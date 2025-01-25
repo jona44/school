@@ -3,8 +3,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django import forms
 from django.shortcuts import get_object_or_404
 from customadmin.models import CustomUser
-from customsettings.models import ClassName, SchoolProfile, SchoolSubject
-from district.models import SchoolAdminProfile
+from customsettings.models import ClassName, SchoolProfile, SchoolSubject,SchoolAdminProfile
 from student.models import ClassRoom
 from .models import TeacherProfile
 
@@ -13,7 +12,7 @@ from .models import TeacherProfile
 class UserRegistrationForm(UserCreationForm):
     class Meta:
         model = CustomUser
-        fields = ('email', 'first_name', 'last_name','user_type', 'position','password1','password2' )
+        fields = ('email', 'first_name', 'last_name','user_type','password1','password2' )
         widgets = {
            'email': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -31,10 +30,7 @@ class UserRegistrationForm(UserCreationForm):
                 'class': 'form-control',
                
                 }),
-            'position': forms.Select(attrs={
-                'class': 'form-control',
-                
-                }),
+            
             'password1': forms.PasswordInput(attrs={
                 'class': 'form-control',  
                 }),

@@ -2,8 +2,7 @@ from urllib import request
 from django import forms
 from django.shortcuts import get_object_or_404
 from customadmin.models import CustomUser
-from customsettings.models import Subjects
-from district.models import SchoolAdminProfile
+from customsettings.models import Subjects ,SchoolAdminProfile
 from .models import *
 from django.http import HttpResponseRedirect
 

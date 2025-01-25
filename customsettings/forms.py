@@ -2,8 +2,6 @@ from django import forms
 from .models import *
 
 class SchoolProfileForm(forms.ModelForm):
-   
-
     class Meta:
         model = SchoolProfile
         fields = ['school_logo']
@@ -33,7 +31,31 @@ class ClassNameForm(forms.ModelForm):
 class GradeLevelForm(forms.ModelForm):
     class Meta:
         model = GradeLevel
-        fields = ['grade_level']  
+        fields = ['grade_level'] 
+        
+        
+        
+class AssignSchoolAdminForm(forms.ModelForm):
+    class Meta:
+        model = SchoolAdminProfile
+        fields = [
+            
+            'school',
+            'admin',
+            
+        ]       
+         
 
-
-
+class SchoolAdminProfileForm(forms.ModelForm):
+    class Meta:
+        model = SchoolAdminProfile
+        fields = [
+            'contact_number',
+            'email',
+            'school',
+            'admin',
+            'address',
+            'date_of_birth',
+            'profile_picture',
+            
+        ]

@@ -62,7 +62,7 @@ def holiday_delete(request, pk):
 @user_passes_test(lambda u: u.is_superuser or u.user_type == 'district_admin')
 def academic_calendar_list(request):
     calendars = AcademicCalendar.objects.all()
-    return render(request, 'academic_calendar/academic_calendar_list.html', {'calendars': calendars})
+    return render(request, 'district/academic_calendar_list.html', {'calendars': calendars})
 
 #-------------------------------------------
 
@@ -74,7 +74,7 @@ def create_academic_calendar(request):
         form = AcademicCalendarForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('academic_calendar_list')
+            return redirect('district_admin_dashboard')
     else:
         form = AcademicCalendarForm()
     return render(request, 'district/create_academic_calendar.html', {'form': form})
@@ -103,4 +103,4 @@ def academic_calendar_delete(request, pk):
     if request.method == "POST":
         calendar.delete()
         return redirect('academic_calendar_list')
-    return render(request, 'academic_calendar/academic_calendar_confirm_delete.html', {'calendar': calendar})
+    return render(request, 'district/academic_calendar_confirm_delete.html', {'calendar': calendar})

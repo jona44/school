@@ -22,64 +22,53 @@ from django.contrib.auth import logout
 from django.views.decorators.http import require_POST
 from teacher.models import TeacherProfile
 
+
+
 @login_required
 @user_passes_test(lambda u: u.is_superuser or u.user_type == 'district_admin')
-def registration(request):
-    form = UserRegistrationForm()
+def register_school_admin(request):
+    form = SchoolAdminRegistrationForm()
 
     if request.method == 'POST':
-        form = UserRegistrationForm(request.POST)
+        form = SchoolAdminRegistrationForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
             user.is_active = False  # Set user as inactive until activation
+            user.user_type = 'school_admin'  # Set user_type to school_admin
             user.save()
 
-            # Assign the user to the desired group
-            group_name = form.cleaned_data.get('user_type')
+            # Assign the user to the 'school_admin' group
+            group_name = 'school_admin'
+            
             desired_group = Group.objects.get(name=group_name)
             user.groups.add(desired_group)
 
-            # Determine the appropriate profile creation view based on user type
-            profile_view_mapping = {
-                'student': 'create_student_profile', 
-                'teacher': 'pre_teacherprofile',
-                'school_admin': 'create_schoolAdmin_profile',
-                'deputy_head': 'create_deputyHead_profile',
-                'school_head': 'create_schoolHead_profile',
-                'district_admin': 'create_districtAdmin_profile', 
-            }
-            profile_view_name = profile_view_mapping.get(group_name, None)
+            # Send activation email
+            current_site = get_current_site(request)
+            protocol = 'https' if request.is_secure() else 'http'
+            subject = 'Activate Your Account'
+            message = render_to_string('district/activation_email.html', {
+                'user': user,
+                'domain': current_site.domain,
+                'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+                'token': default_token_generator.make_token(user),
+                'protocol': protocol,
+            })
+            send_mail(
+                subject,
+                '',  # The message parameter will be used for the email body
+                settings.EMAIL_HOST_USER,  # Replace with your email address
+                [user.email],  # Send to the user's email address
+                fail_silently=False,
+                html_message=message,  # Pass the 'message' as HTML content
+            )
 
-            if profile_view_name:
-                # Send activation email
-                current_site = get_current_site(request)
-                protocol = 'https' if request.is_secure() else 'http' 
-                subject = 'Activate Your Account'
-                message = render_to_string('district/activation_email.html', {
-                    'user': user,
-                    'domain': current_site.domain,
-                    'uid': urlsafe_base64_encode(force_bytes(user.pk)),
-                    'token': default_token_generator.make_token(user),
-                    'protocol': protocol,
-                })
-                send_mail(
-                    subject,
-                    '',  # The message parameter will be used for the email body
-                    settings.EMAIL_HOST_USER,  # Replace with your email address
-                    [user.email],  # Send to the user's email address
-                    fail_silently=False,
-                    html_message=message,  # Pass the 'message' as HTML content
-                )
-
-                # Redirect to the appropriate profile creation view
-                return redirect(profile_view_name, user_id=user.id)
-            else:
-                messages.error(request, 'Invalid user type selected. Please contact support.')
+            # Redirect to the profile creation view for school admin
+            return redirect('assign_schoolAdmin', user_id=user.id)
         else:
             messages.error(request, 'Form submission failed. Please correct the errors below.')
 
-    return render(request, 'district/registration.html', {'form': form})
-
+    return render(request, 'district/register_school_admin.html', {'form': form})
 
 logger = logging.getLogger(__name__)
 
@@ -123,30 +112,7 @@ def create_districtAdmin_profile(request, user_id):
 
 #------------------------------create_schoolAdmin_profile-----------------------------------
 
-@login_required
-@user_passes_test(lambda u: u.is_superuser or u.user_type == 'District_admin')
-def create_schoolAdmin_profile(request, user_id):
-    """
-    View to create a SchoolAdminProfile for a given CustomUser.
-    """
-    user = CustomUser.objects.get(pk=user_id)
 
-    if request.method == 'POST':
-        form = SchoolAdminProfileForm(request.POST)
-        if form.is_valid():
-            profile = form.save(commit=False)
-            profile.school_admin = user  # Assign the CustomUser to the profile
-            profile.save()
-            messages.success(request, 'SchoolAdmin Profile created successfully.')
-            return redirect('schoolAdmin_profile_detail',profile_id=profile.id)  # Redirect to profile details
-    else:
-        form = SchoolAdminProfileForm()
-
-    context = {
-        'form': form,
-        'user': user,
-    }
-    return render(request, 'district/create_schoolAdmin_profile.html', context)
 
 
 #--------------------------------create_schoolHead_profile-----------------------------------
@@ -264,17 +230,6 @@ def activate_account(request, uidb64, token):
 def  registration_complete(request):
     return render(request,'district/registration_complete.html')
 
-
-#-------------------------------admin_profile----------------------------------------
-
-
-@login_required
-@user_passes_test(lambda u: u.is_superuser or u.user_type == 'district_admin')
-def admin_profile(request, pk):
-    user = get_object_or_404(CustomUser, pk=pk)
-    profile = get_object_or_404(SchoolAdminProfile, user=user)
-    return render(request, 'district/admin_profile.html', {'profile': profile})
-
 #------------------------------------create_subject---------------------------------
 
 @login_required
@@ -317,19 +272,6 @@ def districtAdmin_profile_detail(request, profile_id):
     return render(request, 'district/districtAdmin_profile_detail.html', context)
 
 
-#---------------------------schoolAdmin_profile_detail-------------------------------------
-
-
-@login_required
-@user_passes_test(lambda u: u.is_superuser or u.user_type == 'district_admin')
-def schoolAdmin_profile_detail(request, profile_id):
-    """Displays the details of a DistrictAdminProfile."""
-    profile = SchoolAdminProfile.objects.get(pk=profile_id)
-    context = {
-        'profile': profile,
-    }
-    return render(request, 'district/schoolAdmin_profile_detail.html', context)
-
 
 #---------------------------------schoolHead_profile_detail----------------------------------
 
@@ -337,7 +279,7 @@ def schoolAdmin_profile_detail(request, profile_id):
 @user_passes_test(lambda u: u.is_superuser or u.user_type == 'district_admin')
 def schoolHead_profile_detail(request, profile_id):
     """Displays the details of a DistrictAdminProfile."""
-    profile = SchoolAdminProfile.objects.get(pk=profile_id)
+    profile = SchoolHeadProfile.objects.get(pk=profile_id)
     context = {
         'profile': profile,
     }
@@ -471,3 +413,76 @@ def create_district(request):
     else:
         form = DistrictForm()
     return render(request, 'district/create_district.html',  {'form': form})
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser or u.user_type == 'district_admin')
+def register_school_head(request):
+    form =SchoolHeadRegistrationForm()
+
+    if request.method == 'POST':
+        form =SchoolHeadRegistrationForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.is_active = False  # Set user as inactive until activation
+            user.user_type = 'school_head'  # Set user_type to school_head
+            user.save()
+
+            # Assign the user to the 'school_head' group
+            group_name = 'school_head'
+            desired_group = Group.objects.get(name=group_name)
+            user.groups.add(desired_group)
+
+            # Send activation email
+            current_site = get_current_site(request)
+            protocol = 'https' if request.is_secure() else 'http'
+            subject = 'Activate Your Account'
+            message = render_to_string('district/activation_email.html', {
+                'user': user,
+                'domain': current_site.domain,
+                'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+                'token': default_token_generator.make_token(user),
+                'protocol': protocol,
+            })
+            send_mail(
+                subject,
+                '',  # The message parameter will be used for the email body
+                settings.EMAIL_HOST_USER,  # Replace with your email address
+                [user.email],  # Send to the user's email address
+                fail_silently=False,
+                html_message=message,  # Pass the 'message' as HTML content
+            )
+
+            # Redirect to the profile creation view for school head
+            return redirect('assign_schoolHead', user_id=user.id)
+        else:
+            messages.error(request, 'Form submission failed. Please correct the errors below.')
+
+    return render(request, 'district/register_school_head.html', {'form': form})
+
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser or u.user_type == 'District_admin')
+def assign_schoolHead(request, user_id):
+    """
+    View to create a SchoolAdmin for a given CustomUser.
+    """
+    user = CustomUser.objects.get(pk=user_id)
+
+    if request.method == 'POST':
+        form = AssignSchoolHeadForm(request.POST)
+        if form.is_valid():
+            profile = form.save(commit=False)
+            profile.school_admin = user  # Assign the CustomUser to the profile
+            profile.save()
+            messages.success(request, 'SchoolAdmin  created successfully.')
+            return redirect('schoolAdmin_profile_detail',profile_id=profile.id)  # Redirect to profile details
+    else:
+        form = AssignSchoolHeadForm()
+
+    context = {
+        'form': form,
+        'user': user,
+    }
+    return render(request, 'Customsettings/assign_schoolAdmin.html', context)
