@@ -7,6 +7,6 @@ urlpatterns = [
     path('view_teacher_profile/<int:pk>/',views.view_teacher_profile,name='view_teacher_profile'),
     
     
-    path('registration/', views.registration,name='registration'),
+    path('teacher_registration/', views.teacher_registration,name='teacher_registration'),
 
 ]

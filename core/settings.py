@@ -48,8 +48,8 @@ INSTALLED_APPS = [
 AUTH_USER_MODEL = 'customadmin.CustomUser'
 
 AUTHENTICATION_BACKENDS = [
-    'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',  # Allauth backend
+    # 'django.contrib.auth.backends.ModelBackend',
    
 ]
 

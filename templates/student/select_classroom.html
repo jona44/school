@@ -6,7 +6,7 @@
 <h2>Select Classroom for &nbsp; {{student}} {{class_students }}</h2>
   {% for data in class_data %}
   <div class="col-md-3 mb-4 ">
-    <div class=" shado bg1 p-2 rounded">
+    <div class=" shadow  p-2 ">
       <div class="body">
         <h6 class=" text-center">{{ data.classroom.name }}</h6>
         <div class="d-flex">
@@ -37,7 +37,7 @@
       </div>
       </div>
       <div class="card-footer">
-        <a href="{% url 'assign_classroom' pk=student.pk %}?classroom_id={{ data.classroom.id }}" class="btn bg3 text-white">Assign Classroom</a>
+        <a href="{% url 'assign_classroom' pk=student.pk %}?classroom_id={{ data.classroom.id }}" class="btn btn-dark">Assign Classroom</a>
     </div>
     </div>
   </div>

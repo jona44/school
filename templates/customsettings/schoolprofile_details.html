@@ -3,7 +3,7 @@
 
 {% block content %}
 <div class="container mt-5">
-    <div class="col-md-6 offset-md-3 bg1 shado p-5">
+    <div class="col-md-10  shadow p-5">
         <h1>School Profile Details</h1>
         <div>
             {% if schoolprofile.school_logo %}
@@ -28,8 +28,8 @@
             </ul>
         </p>
        
-          <a href="{% url 'update_schoolprofile' schoolprofile.id %}" class="btn bg3 text-white">Update School Profile</a>
-          <a href="{% url 'create_schoolsubjects_step2' %}" class="btn bg3 text-white">Next Step 2</a>
+          <a href="{% url 'update_schoolprofile' schoolprofile.id %}" class="btn btn btn-dark">Update School Profile</a>
+          <a href="{% url 'create_schoolsubjects_step2' %}" class="btn btn btn-dark">Next Step 2</a>
 
         
     </div>

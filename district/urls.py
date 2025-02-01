@@ -8,17 +8,16 @@ urlpatterns = [
     path('activate/<str:uidb64>/<str:token>/', views.activate_account, name='activate_account'),
     
     path('registration_complete/',views.registration_complete,name='registration_complete'),
-    path('staff_profile_view/',views.staff_profile_view,name='staff_profile_view'),
+
 
     path('login/', auth_views.LoginView.as_view(template_name='account/login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(template_name='account/logout.html'), name='logout'),
 
-    # path('password_reset/',views.password_reset, name='password_reset'),
     path('password-reset/',auth_views.PasswordResetView.as_view(template_name='account/password_reset.html' ), name='password_reset'),
-    path('password-reset/done/', auth_views.PasswordResetDoneView.as_view(template_name='district/password_reset_done.html'),name='password_reset_done'),
-    path('password-reset-confirm/<uidb64>/<token>/',auth_views.PasswordResetConfirmView.as_view(template_name='district/password_reset_confirm.html'
+    path('password-reset/done/', auth_views.PasswordResetDoneView.as_view(template_name='account/password_reset_done.html'),name='password_reset_done'),
+    path('password-reset-confirm/<uidb64>/<token>/',auth_views.PasswordResetConfirmView.as_view(template_name='account/password_reset_confirm.html'
          ),name='password_reset_confirm'),
-    path('password-reset-complete/',auth_views.PasswordResetCompleteView.as_view(template_name='district/password_reset_complete.html'),name='password_reset_complete'),
+    path('password-reset-complete/',auth_views.PasswordResetCompleteView.as_view(template_name='account/password_reset_complete.html'),name='password_reset_complete'),
     
     path('activation-sent/',views.activation_sent, name='activation_sent'),
 
@@ -30,7 +29,6 @@ urlpatterns = [
   
     path('register_school_head/', views.register_school_head,name='register_school_head'),
     path('register_school_admin/', views.register_school_admin,name='register_school_admin'),
-   
     
     
     path('create_districtAdmin_profile/<int:user_id>/', views.create_districtAdmin_profile,name='create_districtAdmin_profile'),

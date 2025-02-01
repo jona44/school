@@ -3,7 +3,7 @@
 
 {% block content %}
 
-    <div class="section w-75 bg1 p-3 offset-md-2 mt-5 shado">
+    <div class="section w-75 bg1 p-3 offset-md mt-5 shado">
 
         <table class="table table-striped">
             <thead>
@@ -32,7 +32,7 @@
             {% csrf_token %}
             {{ form|crispy }}
             <div class="d-grid">
-                <button type="submit" class="btn bg3 text-white">School Profile (Next step 2)</button>
+                <button type="submit" class="btn btn-dark">School Profile (Next step 2)</button>
             </div>
             
         </form>

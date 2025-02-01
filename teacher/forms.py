@@ -9,10 +9,10 @@ from .models import TeacherProfile
 
 
 
-class UserRegistrationForm(UserCreationForm):
+class TeacherRegistrationForm(UserCreationForm):
     class Meta:
         model = CustomUser
-        fields = ('email', 'first_name', 'last_name','user_type','password1','password2' )
+        fields = ('email', 'first_name', 'last_name','password1','password2' )
         widgets = {
            'email': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -25,10 +25,6 @@ class UserRegistrationForm(UserCreationForm):
             'last_name': forms.TextInput(attrs={
                 'class': 'form-control',
                 
-                }),
-            'user_type': forms.Select(attrs={
-                'class': 'form-control',
-               
                 }),
             
             'password1': forms.PasswordInput(attrs={

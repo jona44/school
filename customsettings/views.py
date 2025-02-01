@@ -376,8 +376,9 @@ def teacher_list(request):
     return render(request, 'customsettings/teacher_list.html', context)
 
 
+
 @login_required
-@user_passes_test(lambda u: u.is_superuser or u.user_type == 'District_admin')
+@user_passes_test(lambda u: u.is_superuser or u.user_type in ['District_admin', 'school_admin'])
 def schoolAdmin_profile(request, profile_id):
     """
     View to update a SchoolAdminProfile for a given CustomUser.
@@ -388,7 +389,9 @@ def schoolAdmin_profile(request, profile_id):
     if request.method == 'POST':
         form = SchoolAdminProfileForm(request.POST, instance=profile)
         if form.is_valid():
-            form.save()
+            profile = form.save(commit=False)
+            profile.is_complete = True  # Set is_complete to True
+            profile.save()
             messages.success(request, 'SchoolAdmin Profile updated successfully.')
             return redirect('schoolAdmin_profile_detail', profile_id=profile.id)  # Redirect to profile details
     else:

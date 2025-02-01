@@ -123,7 +123,7 @@ class EditStudentProfileForm(forms.ModelForm):
 class CreateClassRoomForm(forms.ModelForm):
     class Meta:
         model  = ClassRoom  
-        fields = ['name', 'grd_level', 'class_teacher']
+        fields = [ 'grd_level','name', 'class_teacher']
 
     def __init__(self, *args, **kwargs):
         school = kwargs.pop('school', None)

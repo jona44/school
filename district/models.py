@@ -29,7 +29,6 @@ class DistrictAdminProfile(models.Model):
     email            = models.EmailField(blank=True, null=True)
     district_schools = models.ManyToManyField(District_School_Registration)
     admin   = models.CharField(max_length=10,choices=[('admin1','admin1'),('admin2','admin2'),('admin3','admin3')],null=True,blank=True)
-    
 
     def __str__(self):
         return f'{self.district_admin}' 
@@ -49,7 +48,6 @@ class SchoolHeadProfile(models.Model):
     is_complete     = models.BooleanField(default=False)
     head            = models.CharField(max_length=10,choices=[('head1','head1'),('head2','head2')],null=True,blank=True)
      
-    
     
     def __str__(self):
         return f'{self.school_head}' 
@@ -93,9 +91,6 @@ class AcademicCalendar(models.Model):
 
     def __str__(self):
         return f'{self.academic_year}'    
-    
-    
-       
     
     
 class GradeLevel(models.Model):

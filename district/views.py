@@ -110,10 +110,6 @@ def create_districtAdmin_profile(request, user_id):
     return render(request, 'district/create_district_admin_profile.html', context)
 
 
-#------------------------------create_schoolAdmin_profile-----------------------------------
-
-
-
 
 #--------------------------------create_schoolHead_profile-----------------------------------
 
@@ -195,17 +191,26 @@ def activation_sent(request):
 #-------------------------------password_reset---------------------------
 
 
-def password_reset(request):
-    return render(request, 'district/password_reset.html')
+
+    
 
 
 #-------------------------------activate_account---------------------------
 
 
+import logging
+
+logger = logging.getLogger(__name__)
+User = get_user_model()
+
 def activate_account(request, uidb64, token):
     try:
+        # Decode the UID and fetch the user
         uid = force_str(urlsafe_base64_decode(uidb64))
         user = User.objects.get(pk=uid)
+
+        # Log the activation attempt
+        logger.info(f"Attempting to activate user with UID: {uid}")
 
         # Check if the token is valid
         if default_token_generator.check_token(user, token):
@@ -213,16 +218,26 @@ def activate_account(request, uidb64, token):
             user.is_active = True
             user.save()
 
+            # Log successful activation
+            logger.info(f"User {user.email} activated successfully.")
+
+            # Add a success message
+            messages.success(request, 'Your account has been activated. Please set your password.')
+
             # Redirect to password reset view
             return redirect('password_reset')
 
-    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-        # Handle the exception (e.g., log an error or return a specific response)
-        return HttpResponse("Invalid activation link")
+        else:
+            # Log invalid token
+            logger.error(f"Invalid token for user with UID: {uid}")
 
-    # Handle other cases or return an appropriate response
-    return HttpResponse("Invalid activation link")
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist) as e:
+        # Log the exception
+        logger.error(f"Invalid activation link: {e}")
 
+    # Handle invalid activation links
+    messages.error(request, 'Invalid activation link. Please contact support.')
+    return redirect('home')  # Redirect to a safe page (e.g., home page)
 
 #-------------------------------registration_complete---------------------------
 
@@ -247,15 +262,6 @@ def create_subject(request):
     return render(request, 'district/subject_form.html', {'form': form,'all_subjects':all_subjects})
 
 
-#----------------------------------staff_profile_view---------------------------------------------
-
-
-def staff_profile_view(request):
-    # Retrieve all staff members excluding students
-    staff_members = CustomUser.objects.filter(is_student=False)
-
-    return render(request, 'district/staff_profile.html', {'staff_members': staff_members}) 
-
 
 #----------------------------districtAdmin_profile_detail---------------------------
 
@@ -264,7 +270,9 @@ def staff_profile_view(request):
 @user_passes_test(lambda u: u.is_superuser or u.user_type == 'district_admin')
 
 def districtAdmin_profile_detail(request, profile_id):
+    
     """Displays the details of a DistrictAdminProfile."""
+    
     profile = DistrictAdminProfile.objects.get(pk=profile_id)
     context = {
         'profile': profile,
@@ -278,7 +286,9 @@ def districtAdmin_profile_detail(request, profile_id):
 @login_required
 @user_passes_test(lambda u: u.is_superuser or u.user_type == 'district_admin')
 def schoolHead_profile_detail(request, profile_id):
+    
     """Displays the details of a DistrictAdminProfile."""
+    
     profile = SchoolHeadProfile.objects.get(pk=profile_id)
     context = {
         'profile': profile,
@@ -486,3 +496,48 @@ def assign_schoolHead(request, user_id):
         'user': user,
     }
     return render(request, 'Customsettings/assign_schoolAdmin.html', context)
+
+
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
+from django.core.mail import send_mail
+from django.contrib.sites.shortcuts import get_current_site
+from django.template.loader import render_to_string
+from django.conf import settings
+import logging
+
+logger = logging.getLogger(__name__)
+
+def password_reset(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        try:
+            user = User.objects.get(email=email)
+            logger.info(f"Password reset requested for user with email: {email}")
+
+            current_site = get_current_site(request)
+            protocol = 'https' if request.is_secure() else 'http'
+            subject = 'Password Reset Requested'
+            message = render_to_string('account/password_reset.html', {
+                'user': user,
+                'domain': current_site.domain,
+                'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+                'token': default_token_generator.make_token(user),
+                'protocol': protocol,
+            })
+            send_mail(
+                subject,
+                '',  # The message parameter will be used for the email body
+                settings.EMAIL_HOST_USER,  # Replace with your email address
+                [user.email],  # Send to the user's email address
+                fail_silently=False,
+                html_message=message,  # Pass the 'message' as HTML content
+            )
+            messages.success(request, 'Password reset email has been sent.')
+            return redirect('password_reset_done')
+        except User.DoesNotExist:
+            logger.error(f"No user found with email: {email}")
+            messages.error(request, 'No user found with this email address.')
+
+    return render(request, 'district/password_reset.html')
