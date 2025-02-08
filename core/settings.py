@@ -30,11 +30,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     
+    'core',
     'student',
     'teacher',
     'grading',
     'district',
     'customsettings',
+    
     
     'django.contrib.sites',  # Required by Allauth
     'allauth',
@@ -48,14 +50,14 @@ INSTALLED_APPS = [
 AUTH_USER_MODEL = 'customadmin.CustomUser'
 
 AUTHENTICATION_BACKENDS = [
-    'allauth.account.auth_backends.AuthenticationBackend',  # Allauth backend
-    # 'django.contrib.auth.backends.ModelBackend',
+     'allauth.account.auth_backends.AuthenticationBackend',  # Allauth backend
+     'django.contrib.auth.backends.ModelBackend',
    
 ]
 
 
 MIDDLEWARE = [
-    'allauth.account.middleware.AccountMiddleware',
+    'district.middlewares.SetSchoolInSessionMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
@@ -64,7 +66,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'district.middlewares.SetSchoolInSessionMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
     
 ]
 import os
@@ -75,7 +77,8 @@ ROOT_URLCONF = 'core.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR,'templates'), os.path.join(BASE_DIR,'templates', 'accounts')],
+        'DIRS': [os.path.join(BASE_DIR,'templates'),
+                 os.path.join(BASE_DIR,'templates','accounts')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -91,7 +94,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'core.wsgi.application'
 
-SITE_ID = 1
+SITE_ID = 2
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
@@ -99,10 +102,9 @@ SITE_ID = 1
 DATABASES = {
     'default': {
     'ENGINE': 'django.db.backends.sqlite3',
-    'NAME': BASE_DIR / 'db-Copy.sqlite3',
+    'NAME': BASE_DIR / 'db.sqlite3',
   }
 }
-
 
 
 # Password validation
@@ -156,7 +158,7 @@ LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
 LOGIN_URL = '/login'
-LOGOUT_URL = '/logout'
+LOGOUT_URL = '/sign-out'
 
 CRISPY_TEMPLATE_PACK = 'uni_form'
 CRISPY_TEMPLATE_PACK = 'bootstrap5'

@@ -674,12 +674,15 @@ def undo_transfer(request, pk):
 from django.db.models import OuterRef, Subquery
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser or u.user_type == 'school_admin')
+@user_passes_test(lambda u: u.is_superuser or u.user_type in ['school_admin', 'district_admin'])
 def suspense_pool(request):
     # Get the school admin's school
-    school_admin_profile = get_object_or_404(SchoolAdminProfile, school_admin=request.user)
-    the_school = school_admin_profile.school
-    school = SchoolProfile.objects.get(school=the_school)
+    if request.user.user_type == 'district_admin':
+        school = None
+    else:
+        school_admin_profile = get_object_or_404(SchoolAdminProfile, school_admin=request.user)
+        the_school = school_admin_profile.school
+        school = SchoolProfile.objects.get(school=the_school)
 
     # Subqueries to fetch the most recent school and district
     recent_school_subquery = StudentSchoolHistory.objects.filter(

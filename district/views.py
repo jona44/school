@@ -225,7 +225,7 @@ def activate_account(request, uidb64, token):
             messages.success(request, 'Your account has been activated. Please set your password.')
 
             # Redirect to password reset view
-            return redirect('password_reset')
+            return redirect('account_reset_password')
 
         else:
             # Log invalid token
@@ -294,56 +294,6 @@ def schoolHead_profile_detail(request, profile_id):
         'profile': profile,
     }
     return render(request, 'district/schoolHead_profile_detail.html', context)
-
-
-#--------------------------create_academic_calendar_step2----------------------------------------
-
-
-@login_required
-@user_passes_test(lambda u: u.is_superuser or u.user_type == 'district_admin')
-def create_academic_calendar(request):
-    if request.method == 'POST':
-        form = AcademicCalendarForm(request.POST)
-        if form.is_valid():
-            # Save the AcademicCalendar instance
-            academic_calendar = form.save()
-            
-            # Redirect to the holiday creation view for this calendar
-            return redirect('create_holidays', academic_calendar.id)
-    else:
-        form = AcademicCalendarForm()
-
-    return render(request, 'district/create_academic_calendar.html', {
-        'form': form
-    })    
-    
-
-#-----------------------------------update_academic_calendar--------------------------------------------
-
-    
-@login_required
-@user_passes_test(lambda u: u.is_superuser or u.user_type == 'district_admin')
-def update_academic_calendar(request, pk):
-    academic_calendar = get_object_or_404(AcademicCalendar, pk=pk)
-    if request.method == 'POST':
-        form = AcademicCalendarForm(request.POST, instance=academic_calendar)
-        if form.is_valid():
-            form.save()
-            return redirect('academic_calendar_list')
-    else:
-        form = AcademicCalendarForm(instance=academic_calendar)
-    return render(request, 'customsettings/update_academic_calendar.html', {'form': form})
-
-
-#------------------------------------academic_calendar_details-------------------------------------    
-
-    
-def academic_calendar_details(request, academic_calendar_id):
-    # Retrieve the academic calendar instance
-    academic_calendar = get_object_or_404(AcademicCalendar, pk=academic_calendar_id)
-    # Render the template with the academic calendar instance
-    return render(request, 'customsettings/academic_calendar_details.html', {'academic_calendar': academic_calendar})
-
 
 #-----------------------------------grade_level-----------------------------------------------------
 

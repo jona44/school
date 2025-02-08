@@ -3,6 +3,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from .models import Holiday, AcademicCalendar
 from .forms import HolidayForm, AcademicCalendarForm
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib import messages
 
 
 @login_required
@@ -73,8 +74,14 @@ def create_academic_calendar(request):
     if request.method == "POST":
         form = AcademicCalendarForm(request.POST)
         if form.is_valid():
-            form.save()
+            academic_calendar = form.save()  # Save the form data
+            messages.success(request, 'Academic calendar created successfully!')
+            # Example of a more specific redirect (if you have a calendar detail view)
+            # return redirect('calendar_detail', calendar_id=academic_calendar.id)
             return redirect('district_admin_dashboard')
+        else:
+            # Form is invalid, re-render with errors
+            return render(request, 'district/create_academic_calendar.html', {'form': form})
     else:
         form = AcademicCalendarForm()
     return render(request, 'district/create_academic_calendar.html', {'form': form})

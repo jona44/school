@@ -1,81 +1,61 @@
 {% extends "partials/base.html" %}
 {% load crispy_forms_tags %}
 
-
-
 {% block content %}
-
-<div class=" offset-md-1 mt-5">
-    <div class="col-8  p-3 offset border shado">
-         <h2 >Create Academic Calendar:{{academic_year}}</h2>
-         <form method="post">
+<div class="offset-md-1 mt-5">
+    <div class="col-8 p-3 offset border shado">
+        <h2>Create Academic Calendar:{{academic_year}}</h2>
+        <form method="post">
             {% csrf_token %}
             <div class="container p-3">
                 <div class="mb-3">
-                    <label for="academic_year" class="form-label">Academic Year</label>
-                    {{ form.academic_year }}
+                    {{ form.academic_year.label_tag }}  {{ form.academic_year }}
                 </div>
                 <div class="term1 mb-3">
                     <div class="row g-2">
                         <div class="col">
-                            <label class="form-label">Term 1 Start Date</label>
-                            {{ form.term_1_start_date }}
+                            {{ form.term_1_start_date.label_tag }} {{ form.term_1_start_date }}
                         </div>
                         <div class="col">
-                            <label class="form-label">Term 1 End Date</label>
-                            {{ form.term_1_end_date }}
+                            {{ form.term_1_end_date.label_tag }} {{ form.term_1_end_date }}
                         </div>
                     </div>
                 </div>
                 <div class="term2 mb-3">
                     <div class="row g-2">
                         <div class="col">
-                            <label class="form-label">Term 2 Start Date</label>
-                            {{ form.term_2_start_date }}
+                            {{ form.term_2_start_date.label_tag }} {{ form.term_2_start_date }}
                         </div>
                         <div class="col">
-                            <label class="form-label">Term 2 End Date</label>
-                            {{ form.term_2_end_date }}
+                            {{ form.term_2_end_date.label_tag }} {{ form.term_2_end_date }}
                         </div>
                     </div>
                 </div>
                 <div class="term3 mb-3">
                     <div class="row g-2">
                         <div class="col">
-                            <label class="form-label">Term 3 Start Date</label>
-                            {{ form.term_3_start_date }}
+                            {{ form.term_3_start_date.label_tag }} {{ form.term_3_start_date }}
                         </div>
-                        
                         <div class="col">
-                            <label class="form-label">Term 3 End Date</label>
-                            {{ form.term_3_end_date }}
+                            {{ form.term_3_end_date.label_tag }} {{ form.term_3_end_date }}
                         </div>
                     </div>
                 </div>
                 <div class="term4 mb-3">
-                   
                     <div class="row g-2">
                         <div class="col">
-                            <label class="form-label text-dark">Term 4 Start Date</label>
-                            {{ form.term_4_start_date }}
+                            {{ form.term_4_start_date.label_tag }} {{ form.term_4_start_date }}
                         </div>
                         <div class="col">
-                            <label class="form-label text-dark">Term 4  End Date</label>
-                            {{ form.term_4_end_date }}
+                            {{ form.term_4_end_date.label_tag }} {{ form.term_4_end_date }}
                         </div>
                     </div>
                 </div>
                 <div class="d-grid">
-                    <button type="submit" class="btn btn-dark">Create Academic Calendar <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"   fill="currentColor" class="bi bi-floppy" viewBox="0 0 16 16">
-                    <path d="M11 2H9v3h2z"/>
-                    <path d="M1.5 0h11.586a1.5 1.5 0 0 1 1.06.44l1.415 1.414A1.5 1.5 0 0 1 16 2.914V14.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 14.5v-13A1.5 1.5 0 0 1 1.5 0M1 1.5v13a.5.5 0 0 0 .5.5H2v-4.5A1.5 1.5 0 0 1 3.5 9h9a1.5 1.5 0 0 1 1.5 1.5V15h.5a.5.5 0 0 0 .5-.5V2.914a.5.5 0 0 0-.146-.353l-1.415-1.415A.5.5 0 0 0 13.086 1H13v4.5A1.5 1.5 0 0 1 11.5 7h-7A1.5 1.5 0 0 1 3 5.5V1H1.5a.5.5 0 0 0-.5.5m3 4a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5V1H4zM3 15h10v-4.5a.5.5 0 0 0-.5-.5h-9a.5.5 0 0 0-.5.5z"/></svg>
-                   </button>
+                    <button type="submit" class="btn btn-dark">Create Academic Calendar</button>
                 </div>
-                
             </div>
         </form>
-        
     </div>
 </div>
-   
 {% endblock %}

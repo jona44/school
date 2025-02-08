@@ -2,10 +2,13 @@
 {% load account %}
 {% load i18n %}
 
-{% block content %}{% autoescape off %} 
-{{ user.first_name }} {{ user.last_name }} 
-{% blocktranslate with site_name=current_site.name site_domain=current_site.domain %}You're receiving this email because you have given your email address to register an account on {{ site_domain }}.{% endblocktranslate %}
+{% block content %}{% autoescape off %}{% blocktrans %}You are receiving this mail because the following change was made to your account:{% endblocktrans %}
 
-{% if code %}{% blocktranslate %}Your email verification code is listed below. Please enter it in your open browser window.{% endblocktranslate %}
+{% block notification_message %}
+{% endblock notification_message%}
 
-{{ code }}{% else %}{% blocktranslate %}To confirm this is correct, go to {{ activate_url }}{% endblocktranslate %}{% endif %}{% endautoescape %}{% endblock content %}
+{% blocktrans %}If you do not recognize this change then please take proper security precautions immediately. The change to your account originates from:
+
+- IP address: {{ip}}
+- Browser: {{user_agent}}
+- Date: {{timestamp}}{% endblocktrans %}{% endautoescape %}{% endblock %}

@@ -218,11 +218,6 @@ class HolidayForm(forms.ModelForm):
         }        
         
         
-class PreTeacherProfileForm(forms.ModelForm):
-    class Meta:
-        model = TeacherProfile
-        fields= ['school','contact_number']
-        
         
 class DistrictForm(forms.ModelForm):
     class Meta:
