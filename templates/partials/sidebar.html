@@ -1,22 +1,17 @@
 {% load custom_tags %}
 {% load core_tags %}
+{% load static %}
+
 
 <div class="d-flex flex-column sidebar fixed mt-5 sidebar-custom">
   <div class="p-3">
-   {% if request.user.is_authenticated %}
-     {% if schoolprofile %}
-        {% if schoolprofile.school_logo %}
-        <img src="{% get_school_logo_template request.user %}" alt="School Logo" class="img-fluid" style="max-height: 250px;">
-              {% else %}
-            {{ schoolprofile.school }}
-        {% endif %}
-        {% else %}
-          My School 
-     {% endif %}
-      {% else %}
-        My School 
-   {% endif %}
-  </div>          
+    {% if school_logo_url %}
+        <img src="{{ school_logo_url }}" alt="School Logo" class="img-fluid" style="max-height: 100px;">
+    {% else %}
+        <p>No school logo available</p>
+    {% endif %}
+    <h1 class="display-6">{{ school}}</h1>
+  </div >       
 
   <hr>
   <ul class="nav nav-pills flex-column mb-auto">

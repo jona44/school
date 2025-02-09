@@ -445,7 +445,7 @@ def assign_schoolHead(request, user_id):
         'form': form,
         'user': user,
     }
-    return render(request, 'Customsettings/assign_schoolAdmin.html', context)
+    return render(request, 'schoolconfig/assign_schoolAdmin.html', context)
 
 
 from django.contrib.auth.tokens import default_token_generator

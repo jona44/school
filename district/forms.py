@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from customadmin.models import CustomUser
-from customsettings.models import SchoolAdminProfile
+from schoolconfig.models import SchoolAdminProfile
 from teacher.models import TeacherProfile
 from . models import AcademicCalendar, District,District_School_Registration, DistrictAdminProfile, Holiday, SchoolHeadProfile, Subjects
 

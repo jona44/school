@@ -1,5 +1,5 @@
 from django.contrib import admin
-from customsettings.models import *
+from schoolconfig.models import *
 
 # Register your models here.
 admin.site.register(SchoolProfile)

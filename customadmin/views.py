@@ -18,7 +18,7 @@ from django.contrib.auth import get_user_model
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required, user_passes_test
-from customsettings.models import SchoolProfile, SchoolSubject ,SchoolAdminProfile
+from schoolconfig.models import SchoolProfile, SchoolSubject ,SchoolAdminProfile
 from teacher.models import TeacherProfile
 from student.models import ClassRoom, StudentProfile
 

@@ -1,6 +1,6 @@
 
 
-from customsettings.models import SchoolAdminProfile
+from schoolconfig.models import SchoolAdminProfile
 
 def get_user_school(user):
     if user.is_school_superuser:

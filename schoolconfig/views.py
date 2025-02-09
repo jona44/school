@@ -33,7 +33,7 @@ def assign_schoolAdmin(request, user_id):
         'form': form,
         'user': user,
     }
-    return render(request, 'Customsettings/assign_schoolAdmin.html', context)
+    return render(request, 'schoolconfig/assign_schoolAdmin.html', context)
 
 
 #-------------------------------admin_profile----------------------------------------
@@ -58,7 +58,7 @@ def schoolAdmin_profile_detail(request, profile_id):
     """Displays the details of a SchoolAdminProfile."""
     profile = get_object_or_404(SchoolAdminProfile, id=profile_id)
    
-    return render(request, 'customsettings/schoolAdmin_profile_detail.html', {'profile': profile})
+    return render(request, 'schoolconfig/schoolAdmin_profile_detail.html', {'profile': profile})
 
 
 @login_required
@@ -101,7 +101,7 @@ def school_profile_create_step1(request):
     else:
         form = SchoolProfileForm(instance=school_profile)
 
-    return render(request, 'customsettings/school_profile_form_step1.html', {
+    return render(request, 'schoolconfig/school_profile_form_step1.html', {
         'form': form,
         'registered_school': registered_school
     })
@@ -120,7 +120,7 @@ def schoolprofile_details(request, id):
     # Get the school profile associated with the registered school and the provided ID
     schoolprofile = get_object_or_404(SchoolProfile, school=registered_school, id=id)
     print(schoolprofile)
-    return render(request, 'customsettings/schoolprofile_details.html', {'schoolprofile': schoolprofile})
+    return render(request, 'schoolconfig/schoolprofile_details.html', {'schoolprofile': schoolprofile})
 
 
 #---------------------------------update_schoolprofile--------------------------------------------------
@@ -137,7 +137,7 @@ def update_schoolprofile(request, pk):
             return redirect('schoolprofile_details',id=schoolprofile.id)
     else:
         form = SchoolProfileForm(instance=schoolprofile)
-    return render(request, 'customsettings/update_schoolprofile.html', {'form': form})
+    return render(request, 'schoolconfig/update_schoolprofile.html', {'form': form})
 
 
 #-----------------------------------create_schoolsubjects_step2------------------------------
@@ -164,7 +164,7 @@ def create_schoolsubjects_step2(request):
             try:
                 school_profile = SchoolProfile.objects.get(school=registered_school)
             except SchoolProfile.DoesNotExist:
-                return render(request, 'customsettings/error.html', {'message': 'School profile does not exist.'})
+                return render(request, 'schoolconfig/error.html', {'message': 'School profile does not exist.'})
 
             # Delete existing SchoolSubject instances for this school profile
             SchoolSubject.objects.filter(school=school_profile).delete()
@@ -179,7 +179,7 @@ def create_schoolsubjects_step2(request):
     else:
         form = SchoolSubjectForm()
 
-    return render(request, 'customsettings/create_schoolsubjects_step2.html', {'form': form})
+    return render(request, 'schoolconfig/create_schoolsubjects_step2.html', {'form': form})
 
 
 #-----------------------------------subject_list------------------------------------------
@@ -196,7 +196,7 @@ def subject_list(request):
         print("School Subject:", school_subject)
         for subject in school_subject.subjects.all():
             print("Subject:", subject)
-    return render(request, 'customsettings/subject_list.html', {'all_subjects': all_subjects})
+    return render(request, 'schoolconfig/subject_list.html', {'all_subjects': all_subjects})
 
 
 #-------------------------- edit_schoolsubjects------------------------------------------
@@ -214,7 +214,7 @@ def edit_schoolsubjects(request, pk):
     else:
         form = SchoolSubjectForm(instance=school_subject)
 
-    return render(request, 'customsettings/edit_schoolsubjects.html', {'form': form})
+    return render(request, 'schoolconfig/edit_schoolsubjects.html', {'form': form})
 
 
 #-----------------------------------ClassName----------------------------------------
@@ -266,7 +266,7 @@ def class_name(request):
     else:
         form = ClassNameForm()
         allclasses = ClassName.objects.filter(schoolprofile=registered_school)
-    return render(request, 'customsettings/class_name.html', {'form': form, 'allclasses':allclasses})
+    return render(request, 'schoolconfig/class_name.html', {'form': form, 'allclasses':allclasses})
 
 #-----------------------------------is_setup_complete------------------------------
 
@@ -283,7 +283,7 @@ def setup_step7(request):
             school = SchoolProfile.objects.get(school=registered_school)
         except SchoolProfile.DoesNotExist:
             # Handle the case where no SchoolName instance exists
-            return render(request, 'customsettings/setup_step6.html', {
+            return render(request, 'schoolconfig/setup_step6.html', {
                 'error': 'No SchoolName instance found for the current SchoolAdminProfile.'
             })
         
@@ -294,11 +294,11 @@ def setup_step7(request):
     
     except SchoolAdminProfile.DoesNotExist:
         # Handle the case where the SchoolAdminProfile does not exist
-        return render(request, 'customsettings/setup_step6.html', {
+        return render(request, 'schoolconfig/setup_step6.html', {
             'error': 'SchoolAdminProfile not found for the current user.'
         })
 
-    return render(request, 'customsettings/setup_step7.html')
+    return render(request, 'schoolconfig/setup_step7.html')
 
 #-----------------------------all_classes------------------------------------------------------
 
@@ -340,7 +340,7 @@ def all_classes(request):
             'male_percentage': male_percentage,
         })
         print(assigned_school)
-    return render(request, 'customsettings/all_classes.html', {'grade_level_data': grade_level_data,'myclasses':myclasses})
+    return render(request, 'schoolconfig/all_classes.html', {'grade_level_data': grade_level_data,'myclasses':myclasses})
 
 
 from django.db.models import Q
@@ -373,7 +373,7 @@ def teacher_list(request):
         'all_teachers': all_teachers,
         'base_subject': SchoolSubject.objects.all(),
     }
-    return render(request, 'customsettings/teacher_list.html', context)
+    return render(request, 'schoolconfig/teacher_list.html', context)
 
 
 
@@ -401,4 +401,4 @@ def schoolAdmin_profile(request, profile_id):
         'form': form,
         'user': user,
     }
-    return render(request, 'Customsettings/update_schoolAdmin_profile.html', context)
+    return render(request, 'schoolconfig/update_schoolAdmin_profile.html', context)

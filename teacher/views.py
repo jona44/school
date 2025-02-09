@@ -1,7 +1,7 @@
 import token
 import uuid
 from django.shortcuts import render, redirect, get_object_or_404
-from customsettings.models import AcademicCalendar, SchoolProfile,SchoolAdminProfile
+from schoolconfig.models import AcademicCalendar, SchoolProfile,SchoolAdminProfile
 from .forms import *
 from .models import TeacherProfile
 from customadmin.models import CustomUser 

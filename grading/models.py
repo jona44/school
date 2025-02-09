@@ -1,7 +1,7 @@
 from django.db import models
 from django.forms import ValidationError
-from customsettings.models import AcademicCalendar, SchoolSubject
-from customsettings.models import Subjects
+from schoolconfig.models import AcademicCalendar, SchoolSubject
+from schoolconfig.models import Subjects
 from student.models import ClassRoom, StudentProfile
 from django.core.exceptions import ValidationError
 

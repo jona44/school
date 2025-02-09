@@ -3,7 +3,7 @@ from django.contrib.auth.models import Group
 from district.models import SchoolHeadProfile
 from student.models import  StudentProfile
 from teacher.models import TeacherProfile
-from customsettings.models import  SchoolAdminProfile, SchoolProfile
+from schoolconfig.models import  SchoolAdminProfile, SchoolProfile
 
 
 def get_user_school(user):

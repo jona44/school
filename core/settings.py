@@ -35,7 +35,7 @@ INSTALLED_APPS = [
     'teacher',
     'grading',
     'district',
-    'customsettings',
+    'schoolconfig',
     
     
     'django.contrib.sites',  # Required by Allauth
@@ -86,8 +86,9 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'customsettings.context_processors.school_profile',
-            ],
+                'schoolconfig.context_processors.school_profile',
+                'schoolconfig.context_processors.school_info',
+            ]  
         },
     },
 ]
