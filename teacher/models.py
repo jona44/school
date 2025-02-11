@@ -1,7 +1,7 @@
 from django.db import models
 from django.urls import reverse
 from customadmin.models import  CustomUser
-from customsettings.models import *
+from schoolconfig.models import *
 from student.models import ClassRoom
 
 class TeacherProfile(models.Model):

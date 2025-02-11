@@ -1,24 +1,42 @@
 from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
 from customadmin.models import CustomUser
-from customsettings.models import AcademicCalendar
-from district.models import SchoolAdminProfile
+from schoolconfig.models import AcademicCalendar,SchoolAdminProfile
 from teacher.models import TeacherProfile
 from .forms import *
 from .models import   *
 from django.db import transaction
-from django.http import HttpResponseRedirect
+from django.http import Http404, HttpResponseRedirect
 from datetime import datetime
 from django.contrib.auth.decorators import login_required, user_passes_test
 from core.utils import get_user_school
 from .utils import mark_default_attendance
 
-
 def get_assigned_school(user):
-    profile = get_object_or_404(SchoolAdminProfile, school_admin=user)
-    _school = profile.school
-    school = get_object_or_404(SchoolProfile, school=_school)
-    
+    """
+    Retrieves the assigned school for a given user.
+
+    Args:
+    user (CustomUser): The user object.
+
+    Returns:
+    SchoolProfile: The assigned school profile.
+
+    Raises:
+    Http404: If the user's profile or school is not found.
+    """
+
+    # Check if the user is a school admin or teacher
+    if hasattr(user, 'schooladminprofile'):
+        profile = user.schooladminprofile
+    elif hasattr(user, 'teacherprofile'):
+        profile = user.teacherprofile
+    else:
+        raise Http404("User is not a school admin or teacher.")
+
+    # Get the assigned school
+    school = get_object_or_404(SchoolProfile, school__school=profile.school)
+
     return school
 
 @login_required
@@ -89,6 +107,8 @@ def create_student_profile(request, user_id):
 def select_classroom(request, pk, grade_level_id):  # Add grade_level_id parameter
     student = get_object_or_404(StudentProfile, pk=pk)
     
+    
+    
     school = get_assigned_school(request.user)
     try:
         grade_level = get_object_or_404(GradeLevel, pk=grade_level_id)
@@ -124,7 +144,7 @@ def select_classroom(request, pk, grade_level_id):  # Add grade_level_id paramet
             'female_percentage': female_percentage,
             'male_percentage': male_percentage,
         })
-
+        print(classroom)
     return render(request, 'student/select_classroom.html', {
         'classrooms': classrooms,
         'class_data': class_data,
@@ -256,53 +276,81 @@ def classrooms(request):
 
 #-----------------------------------create_classroom---------------------------------------
 
+import logging
+
+logger = logging.getLogger(__name__)
 
 @login_required
 @user_passes_test(lambda u: u.is_superuser or u.user_type == 'school_admin')
 def create_classroom(request):
-    year = AcademicCalendar.objects.get(is_current=True)
-    
+    try:
+        year = AcademicCalendar.objects.get(is_current=True)
+    except AcademicCalendar.DoesNotExist:
+        logger.error("Current academic year not found.")
+        return render(request, 'student/create_classroom.html', {'error': "Current academic year not found."})
+
     school_admin_profile = get_object_or_404(SchoolAdminProfile, school_admin=request.user)
     the_school = school_admin_profile.school
-    school = SchoolProfile.objects.get(school=the_school)
-    
+    school = get_object_or_404(SchoolProfile, school=the_school)
+
     if request.method == 'POST':
-        form = CreateClassRoomForm(request.POST, school=school ,year=year)
+        form = CreateClassRoomForm(request.POST, school=school, year=year)
         if form.is_valid():
             classroom = form.save(commit=False)
-            classroom.school=school
+            classroom.school = school
             classroom.year = year
-            classroom.save()  # Corrected: Call save() method to save the classroom object
+            classroom.save()
             return redirect(reverse('classroom_details', args=[classroom.pk]))
+        else:
+            logger.error(f"Form is invalid: {form.errors}")
     else:
         form = CreateClassRoomForm(school=school, year=year)
-        print(school)  
-    return render(request, 'student/create_classroom.html', {'form': form})
+        logger.info(f"Creating classroom for school: {school}")
 
+    return render(request, 'student/create_classroom.html', {'form': form})
 
 #------------------------------classroom_details----------------------------------
 
-from django.http import HttpResponseNotFound
 
+
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.http import Http404
+from django.shortcuts import get_object_or_404, render
+import logging
+
+logger = logging.getLogger(__name__)
+
+"""
+View function to display the details of a classroom.
+This view is accessible only to superusers, school admins, and teachers.
+It fetches the classroom details based on the provided primary key (pk)
+and ensures that the classroom belongs to the school of the logged-in user.
+Args:
+    request (HttpRequest): The HTTP request object.
+    pk (int): The primary key of the classroom.
+Returns:
+    HttpResponse: The rendered template displaying classroom details.
+Raises:
+    Http404: If the classroom or user profile is not found, or if the classroom
+             does not belong to the user's school.
+Context:
+    classroom (ClassRoom): The classroom object.
+    students (QuerySet): The students in the classroom belonging to the user's school.
+    male_count (int): The number of male students in the classroom.
+    female_count (int): The number of female students in the classroom.
+    total_count (int): The total number of students in the classroom.
+    male_percentage (float): The percentage of male students in the classroom.
+    female_percentage (float): The percentage of female students in the classroom.
+    selected_student (StudentProfile or None): The selected student profile, if any.
+    selected_student_pk (int or None): The primary key of the selected student, if any.
+"""
 @login_required
 @user_passes_test(lambda u: u.is_superuser or u.user_type in ['school_admin', 'teacher'])
 def classroom_details(request, pk):
-    # Fetch the classroom object by primary key (pk)
+    # Fetch the classroom object by primary key (classroom_id)
     classroom = get_object_or_404(ClassRoom, pk=pk)
-    
-    # Determine the logged-in user's profile and school
-    profile = None
-    if request.user.user_type == 'school_admin':
-        profile = SchoolAdminProfile.objects.filter(school_admin=request.user).first()
-    elif request.user.user_type == 'teacher':
-        profile = TeacherProfile.objects.filter(teacher=request.user).first()
-    
-    if not profile:
-        return HttpResponseNotFound("Profile not found for the logged-in user.")
-    
-    school = profile.school
-
-    # Filter students by classroom and the user's school
+   
+    school = get_assigned_school(request.user)
     students = classroom.students.filter(school=school)
 
     # Gender-based statistics
@@ -330,6 +378,7 @@ def classroom_details(request, pk):
         'selected_student': selected_student,
         'selected_student_pk': selected_student_pk,
     }
+
     return render(request, 'student/classroom_details.html', context)
 
 
@@ -625,12 +674,15 @@ def undo_transfer(request, pk):
 from django.db.models import OuterRef, Subquery
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser or u.user_type == 'school_admin')
+@user_passes_test(lambda u: u.is_superuser or u.user_type in ['school_admin', 'district_admin'])
 def suspense_pool(request):
     # Get the school admin's school
-    school_admin_profile = get_object_or_404(SchoolAdminProfile, school_admin=request.user)
-    the_school = school_admin_profile.school
-    school = SchoolProfile.objects.get(school=the_school)
+    if request.user.user_type == 'district_admin':
+        school = None
+    else:
+        school_admin_profile = get_object_or_404(SchoolAdminProfile, school_admin=request.user)
+        the_school = school_admin_profile.school
+        school = SchoolProfile.objects.get(school=the_school)
 
     # Subqueries to fetch the most recent school and district
     recent_school_subquery = StudentSchoolHistory.objects.filter(

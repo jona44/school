@@ -1,18 +1,18 @@
 {
-    "editor.fontSize": 18,
-    "cSpell.words": [
-        "capturedclassroom",
-        "customsettings",
-        "editmark",
-        "profileguardian",
-        "schooladminprofile",
-        "schoolprofile",
-        "schoolsubject",
-        "schoolsubjects",
-        "studentprofile",
-        "teacheprofile",
-        "teacherprofile",
-        "uidb"
-    ],
-    "editor.fontFamily": "Consolas, 'Courier New', monospace"
+  "editor.fontSize": 18,
+  "cSpell.words": [
+    "capturedclassroom",
+    "schoolconfig",
+    "editmark",
+    "profileguardian",
+    "schooladminprofile",
+    "schoolprofile",
+    "schoolsubject",
+    "schoolsubjects",
+    "studentprofile",
+    "teacheprofile",
+    "teacherprofile",
+    "uidb"
+  ],
+  "editor.fontFamily": "Consolas, 'Courier New', monospace"
 }

@@ -1,8 +1,9 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from customadmin.models import CustomUser
+from schoolconfig.models import SchoolAdminProfile
 from teacher.models import TeacherProfile
-from . models import AcademicCalendar, District,District_School_Registration, DistrictAdminProfile, Holiday, SchoolAdminProfile, SchoolHeadProfile, Subjects
+from . models import AcademicCalendar, District,District_School_Registration, DistrictAdminProfile, Holiday, SchoolHeadProfile, Subjects
 
 
 
@@ -36,10 +37,22 @@ class SchoolRegistrationForm(forms.ModelForm):
                 }
         
 
-class UserRegistrationForm(UserCreationForm):
+class    SchoolHeadRegistrationForm(UserCreationForm):
     class Meta:
         model = CustomUser
-        fields = ('email', 'first_name', 'last_name','user_type', 'position','password1','password2' )
+        fields = ('email', 'first_name', 'last_name','password1','password2' )
+        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Apply Bootstrap classes to all fields
+        for field_name, field in self.fields.items():
+            if field.widget.attrs:
+                field.widget.attrs['class'] = field.widget.attrs.get('class', '') + ' form-control'
+            else:
+                field.widget.attrs = {'class': 'form-control'}       
+        
+        
         widgets = {
            'email': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -53,15 +66,8 @@ class UserRegistrationForm(UserCreationForm):
                 'class': 'form-control',
                 
                 }),
-            'user_type': forms.Select(attrs={
-                'class': 'form-control',
-               
-                }),
-            'position': forms.Select(attrs={
-                'class': 'form-control',
-                
-                }),
-            'password1': forms.PasswordInput(attrs={
+            
+           'password1': forms.PasswordInput(attrs={
                 'class': 'form-control',  
                 }),
        
@@ -71,32 +77,85 @@ class UserRegistrationForm(UserCreationForm):
                 }),
          }
         
-
-
-class SchoolAdminProfileForm(forms.ModelForm):
+class    SchoolAdminRegistrationForm(UserCreationForm):
     class Meta:
-        model = SchoolAdminProfile
-        fields = [ 'contact_number','school','admin']
+        model = CustomUser
+        fields = ('email', 'first_name', 'last_name','password1','password2' )
+        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Apply Bootstrap classes to all fields
+        for field_name, field in self.fields.items():
+            if field.widget.attrs:
+                field.widget.attrs['class'] = field.widget.attrs.get('class', '') + ' form-control'
+            else:
+                field.widget.attrs = {'class': 'form-control'}    
+        
+        
+        # widgets = {
+        #    'email': forms.TextInput(attrs={
+        #         'class': 'form-control',
+               
+        #         }),
+        #     'first_name': forms.TextInput(attrs={
+        #         'class': 'form-control',
+                
+        #         }),
+        #     'last_name': forms.TextInput(attrs={
+        #         'class': 'form-control',
+                
+        #         }),
+           
+        #     'position': forms.Select(attrs={
+        #         'class': 'form-control',
+                
+        #         }),
+        #     'password1': forms.PasswordInput(attrs={
+        #         'class': 'form-control',  
+        #         }),
+       
+        #     'password2': forms.PasswordInput(attrs={
+        #         'class': 'form-control',
+               
+        #         }),
+        #  }
         
         
         
 class SchoolHeadProfileForm(forms.ModelForm):
     class Meta:
         model = SchoolHeadProfile
-        fields = ['phone_number', 'email', 'school'] 
-                
+        fields = [
+            'contact_number',
+            'email',
+            'school',
+            'address',
+            'date_of_birth',
+            'profile_picture',
+            'is_complete',
+        ]
+        widgets = {
+            'contact_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'school': forms.Select(attrs={'class': 'form-control'}),
+            'address': forms.TextInput(attrs={'class': 'form-control'}),
+            'date_of_birth': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'profile_picture': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'is_complete': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
 
 
 class SubjectForm(forms.ModelForm):
     class Meta:
-        model = Subjects
+        model  = Subjects
         fields = ['subjects']
 
 
 class DistrictAdminProfileForm(forms.ModelForm):
     class Meta:
-        model = DistrictAdminProfile
-        fields = ['contact_number','district_name']
+        model   = DistrictAdminProfile
+        fields  = ['contact_number','district_name']
         widgets = {
             'district_name': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -159,14 +218,38 @@ class HolidayForm(forms.ModelForm):
         }        
         
         
-class PreTeacherProfileForm(forms.ModelForm):
-    class Meta:
-        model = TeacherProfile
-        fields= ['school','contact_number']
-        
         
 class DistrictForm(forms.ModelForm):
     class Meta:
         model = District
         fields = ['district']
         
+        
+class AssignSchoolAdminForm(forms.ModelForm):
+    class Meta:
+        model = SchoolAdminProfile 
+        fields = ['school']
+        widgets = {
+            'school': forms.Select(attrs={
+                'class': 'form-control',
+                'style': 'width:350px;',
+                }),
+            'admin': forms.Select(attrs={
+                'class': 'form-control',
+                'style': 'width:350px;',
+                }),
+        }        
+class AssignSchoolHeadForm(forms.ModelForm):
+    class Meta:
+        model = SchoolHeadProfile 
+        fields = ['school','head']
+        widgets = {
+            'school': forms.Select(attrs={
+                'class': 'form-control',
+                
+                }),
+            'head': forms.Select(attrs={
+                'class': 'form-control',
+               
+                }),
+        }        

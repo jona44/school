@@ -3,6 +3,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from .models import Holiday, AcademicCalendar
 from .forms import HolidayForm, AcademicCalendarForm
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib import messages
 
 
 @login_required
@@ -62,7 +63,7 @@ def holiday_delete(request, pk):
 @user_passes_test(lambda u: u.is_superuser or u.user_type == 'district_admin')
 def academic_calendar_list(request):
     calendars = AcademicCalendar.objects.all()
-    return render(request, 'academic_calendar/academic_calendar_list.html', {'calendars': calendars})
+    return render(request, 'district/academic_calendar_list.html', {'calendars': calendars})
 
 #-------------------------------------------
 
@@ -73,8 +74,14 @@ def create_academic_calendar(request):
     if request.method == "POST":
         form = AcademicCalendarForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('academic_calendar_list')
+            academic_calendar = form.save()  # Save the form data
+            messages.success(request, 'Academic calendar created successfully!')
+            # Example of a more specific redirect (if you have a calendar detail view)
+            # return redirect('calendar_detail', calendar_id=academic_calendar.id)
+            return redirect('district_admin_dashboard')
+        else:
+            # Form is invalid, re-render with errors
+            return render(request, 'district/create_academic_calendar.html', {'form': form})
     else:
         form = AcademicCalendarForm()
     return render(request, 'district/create_academic_calendar.html', {'form': form})
@@ -103,4 +110,4 @@ def academic_calendar_delete(request, pk):
     if request.method == "POST":
         calendar.delete()
         return redirect('academic_calendar_list')
-    return render(request, 'academic_calendar/academic_calendar_confirm_delete.html', {'calendar': calendar})
+    return render(request, 'district/academic_calendar_confirm_delete.html', {'calendar': calendar})

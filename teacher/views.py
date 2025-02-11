@@ -1,6 +1,7 @@
+import token
+import uuid
 from django.shortcuts import render, redirect, get_object_or_404
-from customsettings.models import AcademicCalendar, SchoolProfile
-from district.models import SchoolAdminProfile
+from schoolconfig.models import AcademicCalendar, SchoolProfile,SchoolAdminProfile
 from .forms import *
 from .models import TeacherProfile
 from customadmin.models import CustomUser 
@@ -26,62 +27,52 @@ logger = logging.getLogger(__name__)
 
 @login_required
 @user_passes_test(lambda u: u.is_superuser or u.user_type == 'school_admin')
-def registration(request):
-    form = UserRegistrationForm()
+def teacher_registration(request):
+    form = TeacherRegistrationForm()
 
     if request.method == 'POST':
-        form = UserRegistrationForm(request.POST)
+        form = TeacherRegistrationForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
             user.is_active = False  # Set user as inactive until activation
+            user.user_type = 'teacher'  # Set user_type to teacher
             user.save()
 
-            # Assign the user to the desired group
-            group_name = form.cleaned_data.get('user_type')
+            # Log user ID and email
+            logger.info(f"User saved with ID: {user.id} and email: {user.email}")
+
+            # Assign the user to the 'teacher' group
+            group_name = 'teacher'
             desired_group = Group.objects.get(name=group_name)
             user.groups.add(desired_group)
 
-            # Determine the appropriate profile creation view based on user type
-            profile_view_mapping = {
-                'student': 'create_student_profile', 
-                'teacher': 'create_teacher_profile',
-                'school_admin': 'create_schoolAdmin_profile',
-                'deputy_head': 'create_deputyHead_profile',
-                'school_head': 'create_schoolHead_profile',
-                'district_admin': 'create_districtAdmin_profile', 
-            }
-            profile_view_name = profile_view_mapping.get(group_name, None)
+            # Send activation email
+            current_site = get_current_site(request)
+            protocol = 'https' if request.is_secure() else 'http'
+            subject = 'Activate Your Account'
+            message = render_to_string('district/activation_email.html', {
+                'user': user,
+                'domain': current_site.domain,
+                'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+                'token': default_token_generator.make_token(user),
+                'protocol': protocol,
+            })
+            
+            send_mail(
+                subject,
+                '',  # The message parameter will be used for the email body
+                settings.EMAIL_HOST_USER,  # Replace with your email address
+                [user.email],  # Send to the user's email address
+                fail_silently=False,
+                html_message=message,  # Pass the 'message' as HTML content
+            )
 
-            if profile_view_name:
-                # Send activation email
-                current_site = get_current_site(request)
-                protocol = 'https' if request.is_secure() else 'http' 
-                subject = 'Activate Your Account'
-                message = render_to_string('district/activation_email.html', {
-                    'user': user,
-                    'domain': current_site.domain,
-                    'uid': urlsafe_base64_encode(force_bytes(user.pk)),
-                    'token': default_token_generator.make_token(user),
-                    'protocol': protocol,
-                })
-                send_mail(
-                    subject,
-                    '',  # The message parameter will be used for the email body
-                    settings.EMAIL_HOST_USER,  # Replace with your email address
-                    [user.email],  # Send to the user's email address
-                    fail_silently=False,
-                    html_message=message,  # Pass the 'message' as HTML content
-                )
-
-                # Redirect to the appropriate profile creation view
-                return redirect(profile_view_name, user_id=user.id)
-            else:
-                messages.error(request, 'Invalid user type selected. Please contact support.')
+            # Redirect to the profile creation view for school admin
+            return redirect('create_teacher_profile', user_id=user.id)
         else:
             messages.error(request, 'Form submission failed. Please correct the errors below.')
-
-    return render(request, 'customsettings/registration.html', {'form': form})
-
+        
+    return render(request, 'teacher/teacher_registration.html', {'form': form})
 
 logger = logging.getLogger(__name__)
 
@@ -125,7 +116,6 @@ def create_teacher_profile(request, user_id):
     return render(request, 'teacher/create_teacher_profile.html', {'form': form, 'user_id': user_id})
 
 
-
 #-----------------------------------view_teacher_profile-------------------------------------------
 
 
@@ -153,5 +143,3 @@ def update_teacher_profile(request,pk):
 
 
 #---------------------------------teacher_list--------------------------------------
-
-

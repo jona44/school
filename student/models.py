@@ -5,7 +5,7 @@ from django.db import models
 from django.urls import reverse
 from customadmin.models import  CustomUser
 from django.db.models import Count
-from customsettings.models import *
+from schoolconfig.models import *
 
 
 class StudentProfile(models.Model):

@@ -22,64 +22,53 @@ from django.contrib.auth import logout
 from django.views.decorators.http import require_POST
 from teacher.models import TeacherProfile
 
+
+
 @login_required
 @user_passes_test(lambda u: u.is_superuser or u.user_type == 'district_admin')
-def registration(request):
-    form = UserRegistrationForm()
+def register_school_admin(request):
+    form = SchoolAdminRegistrationForm()
 
     if request.method == 'POST':
-        form = UserRegistrationForm(request.POST)
+        form = SchoolAdminRegistrationForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
             user.is_active = False  # Set user as inactive until activation
+            user.user_type = 'school_admin'  # Set user_type to school_admin
             user.save()
 
-            # Assign the user to the desired group
-            group_name = form.cleaned_data.get('user_type')
+            # Assign the user to the 'school_admin' group
+            group_name = 'school_admin'
+            
             desired_group = Group.objects.get(name=group_name)
             user.groups.add(desired_group)
 
-            # Determine the appropriate profile creation view based on user type
-            profile_view_mapping = {
-                'student': 'create_student_profile', 
-                'teacher': 'pre_teacherprofile',
-                'school_admin': 'create_schoolAdmin_profile',
-                'deputy_head': 'create_deputyHead_profile',
-                'school_head': 'create_schoolHead_profile',
-                'district_admin': 'create_districtAdmin_profile', 
-            }
-            profile_view_name = profile_view_mapping.get(group_name, None)
+            # Send activation email
+            current_site = get_current_site(request)
+            protocol = 'https' if request.is_secure() else 'http'
+            subject = 'Activate Your Account'
+            message = render_to_string('district/activation_email.html', {
+                'user': user,
+                'domain': current_site.domain,
+                'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+                'token': default_token_generator.make_token(user),
+                'protocol': protocol,
+            })
+            send_mail(
+                subject,
+                '',  # The message parameter will be used for the email body
+                settings.EMAIL_HOST_USER,  # Replace with your email address
+                [user.email],  # Send to the user's email address
+                fail_silently=False,
+                html_message=message,  # Pass the 'message' as HTML content
+            )
 
-            if profile_view_name:
-                # Send activation email
-                current_site = get_current_site(request)
-                protocol = 'https' if request.is_secure() else 'http' 
-                subject = 'Activate Your Account'
-                message = render_to_string('district/activation_email.html', {
-                    'user': user,
-                    'domain': current_site.domain,
-                    'uid': urlsafe_base64_encode(force_bytes(user.pk)),
-                    'token': default_token_generator.make_token(user),
-                    'protocol': protocol,
-                })
-                send_mail(
-                    subject,
-                    '',  # The message parameter will be used for the email body
-                    settings.EMAIL_HOST_USER,  # Replace with your email address
-                    [user.email],  # Send to the user's email address
-                    fail_silently=False,
-                    html_message=message,  # Pass the 'message' as HTML content
-                )
-
-                # Redirect to the appropriate profile creation view
-                return redirect(profile_view_name, user_id=user.id)
-            else:
-                messages.error(request, 'Invalid user type selected. Please contact support.')
+            # Redirect to the profile creation view for school admin
+            return redirect('assign_schoolAdmin', user_id=user.id)
         else:
             messages.error(request, 'Form submission failed. Please correct the errors below.')
 
-    return render(request, 'district/registration.html', {'form': form})
-
+    return render(request, 'district/register_school_admin.html', {'form': form})
 
 logger = logging.getLogger(__name__)
 
@@ -120,33 +109,6 @@ def create_districtAdmin_profile(request, user_id):
     }
     return render(request, 'district/create_district_admin_profile.html', context)
 
-
-#------------------------------create_schoolAdmin_profile-----------------------------------
-
-@login_required
-@user_passes_test(lambda u: u.is_superuser or u.user_type == 'District_admin')
-def create_schoolAdmin_profile(request, user_id):
-    """
-    View to create a SchoolAdminProfile for a given CustomUser.
-    """
-    user = CustomUser.objects.get(pk=user_id)
-
-    if request.method == 'POST':
-        form = SchoolAdminProfileForm(request.POST)
-        if form.is_valid():
-            profile = form.save(commit=False)
-            profile.school_admin = user  # Assign the CustomUser to the profile
-            profile.save()
-            messages.success(request, 'SchoolAdmin Profile created successfully.')
-            return redirect('schoolAdmin_profile_detail',profile_id=profile.id)  # Redirect to profile details
-    else:
-        form = SchoolAdminProfileForm()
-
-    context = {
-        'form': form,
-        'user': user,
-    }
-    return render(request, 'district/create_schoolAdmin_profile.html', context)
 
 
 #--------------------------------create_schoolHead_profile-----------------------------------
@@ -229,17 +191,26 @@ def activation_sent(request):
 #-------------------------------password_reset---------------------------
 
 
-def password_reset(request):
-    return render(request, 'district/password_reset.html')
+
+    
 
 
 #-------------------------------activate_account---------------------------
 
 
+import logging
+
+logger = logging.getLogger(__name__)
+User = get_user_model()
+
 def activate_account(request, uidb64, token):
     try:
+        # Decode the UID and fetch the user
         uid = force_str(urlsafe_base64_decode(uidb64))
         user = User.objects.get(pk=uid)
+
+        # Log the activation attempt
+        logger.info(f"Attempting to activate user with UID: {uid}")
 
         # Check if the token is valid
         if default_token_generator.check_token(user, token):
@@ -247,33 +218,32 @@ def activate_account(request, uidb64, token):
             user.is_active = True
             user.save()
 
+            # Log successful activation
+            logger.info(f"User {user.email} activated successfully.")
+
+            # Add a success message
+            messages.success(request, 'Your account has been activated. Please set your password.')
+
             # Redirect to password reset view
-            return redirect('password_reset')
+            return redirect('account_reset_password')
 
-    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-        # Handle the exception (e.g., log an error or return a specific response)
-        return HttpResponse("Invalid activation link")
+        else:
+            # Log invalid token
+            logger.error(f"Invalid token for user with UID: {uid}")
 
-    # Handle other cases or return an appropriate response
-    return HttpResponse("Invalid activation link")
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist) as e:
+        # Log the exception
+        logger.error(f"Invalid activation link: {e}")
 
+    # Handle invalid activation links
+    messages.error(request, 'Invalid activation link. Please contact support.')
+    return redirect('home')  # Redirect to a safe page (e.g., home page)
 
 #-------------------------------registration_complete---------------------------
 
 
 def  registration_complete(request):
     return render(request,'district/registration_complete.html')
-
-
-#-------------------------------admin_profile----------------------------------------
-
-
-@login_required
-@user_passes_test(lambda u: u.is_superuser or u.user_type == 'district_admin')
-def admin_profile(request, pk):
-    user = get_object_or_404(CustomUser, pk=pk)
-    profile = get_object_or_404(SchoolAdminProfile, user=user)
-    return render(request, 'district/admin_profile.html', {'profile': profile})
 
 #------------------------------------create_subject---------------------------------
 
@@ -292,15 +262,6 @@ def create_subject(request):
     return render(request, 'district/subject_form.html', {'form': form,'all_subjects':all_subjects})
 
 
-#----------------------------------staff_profile_view---------------------------------------------
-
-
-def staff_profile_view(request):
-    # Retrieve all staff members excluding students
-    staff_members = CustomUser.objects.filter(is_student=False)
-
-    return render(request, 'district/staff_profile.html', {'staff_members': staff_members}) 
-
 
 #----------------------------districtAdmin_profile_detail---------------------------
 
@@ -309,7 +270,9 @@ def staff_profile_view(request):
 @user_passes_test(lambda u: u.is_superuser or u.user_type == 'district_admin')
 
 def districtAdmin_profile_detail(request, profile_id):
+    
     """Displays the details of a DistrictAdminProfile."""
+    
     profile = DistrictAdminProfile.objects.get(pk=profile_id)
     context = {
         'profile': profile,
@@ -317,81 +280,20 @@ def districtAdmin_profile_detail(request, profile_id):
     return render(request, 'district/districtAdmin_profile_detail.html', context)
 
 
-#---------------------------schoolAdmin_profile_detail-------------------------------------
-
-
-@login_required
-@user_passes_test(lambda u: u.is_superuser or u.user_type == 'district_admin')
-def schoolAdmin_profile_detail(request, profile_id):
-    """Displays the details of a DistrictAdminProfile."""
-    profile = SchoolAdminProfile.objects.get(pk=profile_id)
-    context = {
-        'profile': profile,
-    }
-    return render(request, 'district/schoolAdmin_profile_detail.html', context)
-
 
 #---------------------------------schoolHead_profile_detail----------------------------------
 
 @login_required
 @user_passes_test(lambda u: u.is_superuser or u.user_type == 'district_admin')
 def schoolHead_profile_detail(request, profile_id):
+    
     """Displays the details of a DistrictAdminProfile."""
-    profile = SchoolAdminProfile.objects.get(pk=profile_id)
+    
+    profile = SchoolHeadProfile.objects.get(pk=profile_id)
     context = {
         'profile': profile,
     }
     return render(request, 'district/schoolHead_profile_detail.html', context)
-
-
-#--------------------------create_academic_calendar_step2----------------------------------------
-
-
-@login_required
-@user_passes_test(lambda u: u.is_superuser or u.user_type == 'district_admin')
-def create_academic_calendar(request):
-    if request.method == 'POST':
-        form = AcademicCalendarForm(request.POST)
-        if form.is_valid():
-            # Save the AcademicCalendar instance
-            academic_calendar = form.save()
-            
-            # Redirect to the holiday creation view for this calendar
-            return redirect('create_holidays', academic_calendar.id)
-    else:
-        form = AcademicCalendarForm()
-
-    return render(request, 'district/create_academic_calendar.html', {
-        'form': form
-    })    
-    
-
-#-----------------------------------update_academic_calendar--------------------------------------------
-
-    
-@login_required
-@user_passes_test(lambda u: u.is_superuser or u.user_type == 'district_admin')
-def update_academic_calendar(request, pk):
-    academic_calendar = get_object_or_404(AcademicCalendar, pk=pk)
-    if request.method == 'POST':
-        form = AcademicCalendarForm(request.POST, instance=academic_calendar)
-        if form.is_valid():
-            form.save()
-            return redirect('academic_calendar_list')
-    else:
-        form = AcademicCalendarForm(instance=academic_calendar)
-    return render(request, 'customsettings/update_academic_calendar.html', {'form': form})
-
-
-#------------------------------------academic_calendar_details-------------------------------------    
-
-    
-def academic_calendar_details(request, academic_calendar_id):
-    # Retrieve the academic calendar instance
-    academic_calendar = get_object_or_404(AcademicCalendar, pk=academic_calendar_id)
-    # Render the template with the academic calendar instance
-    return render(request, 'customsettings/academic_calendar_details.html', {'academic_calendar': academic_calendar})
-
 
 #-----------------------------------grade_level-----------------------------------------------------
 
@@ -471,3 +373,121 @@ def create_district(request):
     else:
         form = DistrictForm()
     return render(request, 'district/create_district.html',  {'form': form})
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser or u.user_type == 'district_admin')
+def register_school_head(request):
+    form =SchoolHeadRegistrationForm()
+
+    if request.method == 'POST':
+        form =SchoolHeadRegistrationForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.is_active = False  # Set user as inactive until activation
+            user.user_type = 'school_head'  # Set user_type to school_head
+            user.save()
+
+            # Assign the user to the 'school_head' group
+            group_name = 'school_head'
+            desired_group = Group.objects.get(name=group_name)
+            user.groups.add(desired_group)
+
+            # Send activation email
+            current_site = get_current_site(request)
+            protocol = 'https' if request.is_secure() else 'http'
+            subject = 'Activate Your Account'
+            message = render_to_string('district/activation_email.html', {
+                'user': user,
+                'domain': current_site.domain,
+                'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+                'token': default_token_generator.make_token(user),
+                'protocol': protocol,
+            })
+            send_mail(
+                subject,
+                '',  # The message parameter will be used for the email body
+                settings.EMAIL_HOST_USER,  # Replace with your email address
+                [user.email],  # Send to the user's email address
+                fail_silently=False,
+                html_message=message,  # Pass the 'message' as HTML content
+            )
+
+            # Redirect to the profile creation view for school head
+            return redirect('assign_schoolHead', user_id=user.id)
+        else:
+            messages.error(request, 'Form submission failed. Please correct the errors below.')
+
+    return render(request, 'district/register_school_head.html', {'form': form})
+
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser or u.user_type == 'District_admin')
+def assign_schoolHead(request, user_id):
+    """
+    View to create a SchoolAdmin for a given CustomUser.
+    """
+    user = CustomUser.objects.get(pk=user_id)
+
+    if request.method == 'POST':
+        form = AssignSchoolHeadForm(request.POST)
+        if form.is_valid():
+            profile = form.save(commit=False)
+            profile.school_admin = user  # Assign the CustomUser to the profile
+            profile.save()
+            messages.success(request, 'SchoolAdmin  created successfully.')
+            return redirect('schoolAdmin_profile_detail',profile_id=profile.id)  # Redirect to profile details
+    else:
+        form = AssignSchoolHeadForm()
+
+    context = {
+        'form': form,
+        'user': user,
+    }
+    return render(request, 'schoolconfig/assign_schoolAdmin.html', context)
+
+
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
+from django.core.mail import send_mail
+from django.contrib.sites.shortcuts import get_current_site
+from django.template.loader import render_to_string
+from django.conf import settings
+import logging
+
+logger = logging.getLogger(__name__)
+
+def password_reset(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        try:
+            user = User.objects.get(email=email)
+            logger.info(f"Password reset requested for user with email: {email}")
+
+            current_site = get_current_site(request)
+            protocol = 'https' if request.is_secure() else 'http'
+            subject = 'Password Reset Requested'
+            message = render_to_string('account/password_reset.html', {
+                'user': user,
+                'domain': current_site.domain,
+                'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+                'token': default_token_generator.make_token(user),
+                'protocol': protocol,
+            })
+            send_mail(
+                subject,
+                '',  # The message parameter will be used for the email body
+                settings.EMAIL_HOST_USER,  # Replace with your email address
+                [user.email],  # Send to the user's email address
+                fail_silently=False,
+                html_message=message,  # Pass the 'message' as HTML content
+            )
+            messages.success(request, 'Password reset email has been sent.')
+            return redirect('password_reset_done')
+        except User.DoesNotExist:
+            logger.error(f"No user found with email: {email}")
+            messages.error(request, 'No user found with this email address.')
+
+    return render(request, 'district/password_reset.html')

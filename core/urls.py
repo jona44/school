@@ -28,7 +28,7 @@ urlpatterns = [
     path('', include('teacher.urls')),
     path('', include('grading.urls')),
     path('', include('district.urls')),
-    path('', include('customsettings.urls')),
+    path('', include('schoolconfig.urls')),
     path('', include('customadmin.urls')),
     
 ]

@@ -22,17 +22,6 @@ class District_School_Registration(models.Model):
         return f'{self.school}' 
 
 
-class SchoolAdminProfile(models.Model):
-    school_admin      = models.OneToOneField(CustomUser, on_delete=models.CASCADE,blank=True, null=True)
-    contact_number    = models.CharField(max_length=255,blank=True, null=True)
-    email             = models.EmailField(blank=True, null=True)
-    school            = models.ForeignKey(District_School_Registration, on_delete=models.CASCADE,blank=True, null=True)
-    admin             = models.CharField(max_length=10,choices=[('admin1','admin1'),('admin2','admin2'),('admin3','admin3')],null=True,blank=True)
-    
-    def __str__(self):
-        return f'{self.school_admin}' 
-
-
 class DistrictAdminProfile(models.Model):
     district_admin   = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='district_admin_profile')
     district_name    = models.CharField(max_length=255,blank=True, null=True)
@@ -40,7 +29,6 @@ class DistrictAdminProfile(models.Model):
     email            = models.EmailField(blank=True, null=True)
     district_schools = models.ManyToManyField(District_School_Registration)
     admin   = models.CharField(max_length=10,choices=[('admin1','admin1'),('admin2','admin2'),('admin3','admin3')],null=True,blank=True)
-    
 
     def __str__(self):
         return f'{self.district_admin}' 
@@ -48,10 +36,18 @@ class DistrictAdminProfile(models.Model):
     
     
 class SchoolHeadProfile(models.Model):
-    school_head      = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='SchoolHead_profile')
-    phone_number     =  models.CharField(max_length=255,blank=True, null=True)
-    email            = models.EmailField(blank=True, null=True)
-    school           = models.ForeignKey(District_School_Registration, on_delete=models.CASCADE,blank=True, null=True)
+    school_head    = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='SchoolHead_profile')
+    contact_number   =  models.CharField(max_length=255,blank=True, null=True)
+    email          = models.EmailField(blank=True, null=True)
+    school         = models.ForeignKey(District_School_Registration, on_delete=models.CASCADE,blank=True, null=True)
+    address        = models.CharField(max_length=255,blank=True, null=True)
+    date_of_birth  = models.DateField(blank=True, null=True)
+    profile_picture = models.ImageField(upload_to='school_head_profiles/',blank=True, null=True)
+    date_created    = models.DateTimeField(auto_now_add=True)
+    last_updated    = models.DateTimeField(auto_now=True)
+    is_complete     = models.BooleanField(default=False)
+    head            = models.CharField(max_length=10,choices=[('head1','head1'),('head2','head2')],null=True,blank=True)
+     
     
     def __str__(self):
         return f'{self.school_head}' 
@@ -95,9 +91,6 @@ class AcademicCalendar(models.Model):
 
     def __str__(self):
         return f'{self.academic_year}'    
-    
-    
-       
     
     
 class GradeLevel(models.Model):

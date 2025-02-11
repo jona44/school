@@ -1,0 +1,13 @@
+{% extends "partials/base.html" %}
+
+{% block content %}
+<div class="section mt-5">
+   <h2>School Admin Profile: {{ profile.school_admin.username }}</h2>
+  <ul>
+   
+    <li><strong>Assigned School:</strong> {{ profile.school }}</li>
+    <li><strong>Admin Role:</strong> {{ profile.admin }}</li>
+  </ul>
+</div>
+ 
+{% endblock %}
