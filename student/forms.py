@@ -1,4 +1,5 @@
 from urllib import request
+from django.contrib.auth.forms import UserCreationForm
 from django import forms
 from django.shortcuts import get_object_or_404
 from customadmin.models import CustomUser
@@ -7,7 +8,7 @@ from .models import *
 from django.http import HttpResponseRedirect
 
 
-class StudentRegistrationForm(forms.ModelForm):
+class StudentRegistrationForm(UserCreationForm):
     class Meta:
         model = CustomUser
         fields = ['email', 'first_name', 'last_name']
@@ -27,6 +28,8 @@ class StudentRegistrationForm(forms.ModelForm):
                 }),
         
         }
+        
+     
 
 class StudentProfileForm(forms.ModelForm):
     class Meta:

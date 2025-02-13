@@ -14,6 +14,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+import debug_toolbar
 from django.contrib import admin
 from django.shortcuts import redirect
 from django.urls import path, include
@@ -30,6 +31,7 @@ urlpatterns = [
     path('', include('district.urls')),
     path('', include('schoolconfig.urls')),
     path('', include('customadmin.urls')),
+    path('__debug__/', include('debug_toolbar.urls')),
     
 ]
 

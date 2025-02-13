@@ -1,16 +1,32 @@
+from django.conf import settings
 from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
 from customadmin.models import CustomUser
-from schoolconfig.models import AcademicCalendar,SchoolAdminProfile
 from teacher.models import TeacherProfile
 from .forms import *
 from .models import   *
 from django.db import transaction
 from django.http import Http404, HttpResponseRedirect
 from datetime import datetime
-from django.contrib.auth.decorators import login_required, user_passes_test
 from core.utils import get_user_school
 from .utils import mark_default_attendance
+import token
+import uuid
+from schoolconfig.models import AcademicCalendar, SchoolProfile,SchoolAdminProfile
+from .forms import *
+from django.contrib.auth.decorators import login_required, user_passes_test
+import logging
+from .models import*
+from django.contrib import messages
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.template.loader import render_to_string
+from django.utils.encoding import force_bytes, force_str
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
+from django.contrib.sites.shortcuts import get_current_site
+from django.contrib.auth.models import Group
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 def get_assigned_school(user):
     """
@@ -25,7 +41,6 @@ def get_assigned_school(user):
     Raises:
     Http404: If the user's profile or school is not found.
     """
-
     # Check if the user is a school admin or teacher
     if hasattr(user, 'schooladminprofile'):
         profile = user.schooladminprofile
@@ -33,28 +48,65 @@ def get_assigned_school(user):
         profile = user.teacherprofile
     else:
         raise Http404("User is not a school admin or teacher.")
-
     # Get the assigned school
     school = get_object_or_404(SchoolProfile, school__school=profile.school)
 
     return school
 
+
+
 @login_required
 @user_passes_test(lambda u: u.is_superuser or u.user_type == 'school_admin')
 def student_registration(request):
+    form = StudentRegistrationForm()
+
     if request.method == 'POST':
-        form = StudentRegistrationForm(request.POST, prefix='student')
+        form = StudentRegistrationForm(request.POST)
         if form.is_valid():
-            # Save student details
-            student = form.save(commit=False)
-            student.save()
-            return redirect('create_student_profile', user_id=student.pk)
-    else:
-        form = StudentRegistrationForm(prefix='student')
+            user = form.save(commit=False)
+            user.is_active = False  # Set user as inactive until activation
+            user.user_type = 'student'  # Set user_type to teacher
+            user.save()
+
+            # Log user ID and email
+            logger.info(f"User saved with ID: {user.id} and email: {user.email}")
+
+            # Assign the user to the 'teacher' group
+            group_name = 'student'
+            desired_group = Group.objects.get(name=group_name)
+            user.groups.add(desired_group)
+
+            # Send activation email
+            current_site = get_current_site(request)
+            protocol = 'https' if request.is_secure() else 'http'
+            subject = 'Activate Your Account'
+            message = render_to_string('district/activation_email.html', {
+                'user': user,
+                'domain': current_site.domain,
+                'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+                'token': default_token_generator.make_token(user),
+                'protocol': protocol,
+            })
+            
+            send_mail(
+                subject,
+                '',  # The message parameter will be used for the email body
+                settings.EMAIL_HOST_USER,  # Replace with your email address
+                [user.email],  # Send to the user's email address
+                fail_silently=False,
+                html_message=message,  # Pass the 'message' as HTML content
+            )
+
+            # Redirect to the profile creation view for school admin
+            return redirect('create_student_profile', user_id=user.id)
+        else:
+            messages.error(request, 'Form submission failed. Please correct the errors below.')
+        
     return render(request, 'student/student_registration.html', {'form': form})
 
-
 #----------------------------------create_student_profile--------------------------------
+
+
 
 @login_required
 @user_passes_test(lambda u: u.is_superuser or u.user_type == 'school_admin')
@@ -289,8 +341,8 @@ def create_classroom(request):
         logger.error("Current academic year not found.")
         return render(request, 'student/create_classroom.html', {'error': "Current academic year not found."})
 
-    school_admin_profile = get_object_or_404(SchoolAdminProfile, school_admin=request.user)
-    the_school = school_admin_profile.school
+    profile = get_object_or_404(SchoolAdminProfile, school_admin=request.user)
+    the_school = profile.school
     school = get_object_or_404(SchoolProfile, school=the_school)
 
     if request.method == 'POST':
@@ -300,14 +352,14 @@ def create_classroom(request):
             classroom.school = school
             classroom.year = year
             classroom.save()
-            return redirect(reverse('classroom_details', args=[classroom.pk]))
+            return redirect('create_classroom')
         else:
             logger.error(f"Form is invalid: {form.errors}")
     else:
         form = CreateClassRoomForm(school=school, year=year)
         logger.info(f"Creating classroom for school: {school}")
-
-    return render(request, 'student/create_classroom.html', {'form': form})
+    klass = ClassRoom.objects.filter(school= school)
+    return render(request, 'student/create_classroom.html', {'form': form,'klass':klass})
 
 #------------------------------classroom_details----------------------------------
 

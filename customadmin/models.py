@@ -2,6 +2,9 @@ import datetime
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 from django.http import HttpResponseForbidden
+from django.contrib.auth.hashers import make_password
+import random
+import string
 
 
 class CustomUserManager(BaseUserManager):
@@ -24,12 +27,10 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         ('student', 'STUDENT'),
         ('teacher', 'TEACHER'),
         ('school_admin', 'SCHOOL_ADMIN'),
-        ('deputy_head', 'DEPUTY_HEAD'),
         ('school_head', 'SCHOOL_HEAD'),
         ('district_admin', 'DISTRICT_ADMIN'),
     )
 
-    # Removed POSITION attribute as it is no longer needed
 
     email       = models.EmailField(unique=True)
     first_name  = models.CharField(max_length=30)
@@ -42,11 +43,17 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     objects     = CustomUserManager()
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['first_name', 'last_name']
+    REQUIRED_FIELDS = []
 
     def save(self, *args, **kwargs):
-        if not self.pk:
-            self.set_password('munyaradzi')
+        if not self.pk:  # Only on creation
+            # Generate a random password
+            password_length = 12  # Or whatever length you prefer
+            random_password = ''.join(random.choice(string.ascii_letters + string.digits) for i in range(password_length))
+            # Hash the password and set it as unusable
+            self.password = make_password(random_password) # sets the password and hashes it
+            self.is_active=False # account is not active until the user sets the password
+
         super().save(*args, **kwargs)
 
     def __str__(self):

@@ -8,6 +8,9 @@ from .models import *
 from district.models import AcademicCalendar
 from django.contrib.auth.decorators import login_required, user_passes_test
 from .decorators import filter_by_school 
+from django.http import JsonResponse
+from customadmin.models import CustomUser
+from .forms import CustomUserSearchForm
 
 
 @login_required
@@ -133,6 +136,7 @@ def update_schoolprofile(request, pk):
     if request.method == 'POST':
         form = SchoolProfileForm(request.POST, request.FILES, instance=schoolprofile)
         if form.is_valid():
+            
             form.save()
             return redirect('schoolprofile_details',id=schoolprofile.id)
     else:
@@ -145,7 +149,7 @@ def update_schoolprofile(request, pk):
 
 @login_required
 @user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='school_admin').exists())
-def create_schoolsubjects_step2(request):
+def select_school_subjects_step2(request):
     """
     Handles the creation of SchoolSubject instances for a specific school.
 
@@ -179,24 +183,22 @@ def create_schoolsubjects_step2(request):
     else:
         form = SchoolSubjectForm()
 
-    return render(request, 'schoolconfig/create_schoolsubjects_step2.html', {'form': form})
+    return render(request, 'schoolconfig/select_school_subjects_step2.html', {'form': form})
 
 
-#-----------------------------------subject_list------------------------------------------
-
-def subject_list(request):
+         
+def subject_list(request, pk=None):
     # Get the school admin profile for the logged-in user
     school_admin_profile = get_object_or_404(SchoolAdminProfile, school_admin=request.user)
     # Get the registered school related to the logged-in school admin
     current_school = school_admin_profile.school
     school  = SchoolProfile.objects.get(school=current_school)
     all_subjects = SchoolSubject.objects.filter(school=school)
-    print("All Subjects:", all_subjects)  # Debugging line
-    for school_subject in all_subjects:
-        print("School Subject:", school_subject)
-        for subject in school_subject.subjects.all():
-            print("Subject:", subject)
-    return render(request, 'schoolconfig/subject_list.html', {'all_subjects': all_subjects})
+
+    # Get the primary key of the first school subject (if exists)
+    pk = all_subjects.first().pk if all_subjects else None
+
+    return render(request, 'schoolconfig/subject_list.html', {'all_subjects': all_subjects, 'pk': pk})         
 
 
 #-------------------------- edit_schoolsubjects------------------------------------------
@@ -209,7 +211,8 @@ def edit_schoolsubjects(request, pk):
     if request.method == 'POST':
         form = SchoolSubjectForm(request.POST, instance=school_subject)
         if form.is_valid():
-            form.save()
+            edited = form.save(commit=False)
+            edited.save()
             return redirect('subject_list')  # Replace with your success URL
     else:
         form = SchoolSubjectForm(instance=school_subject)
@@ -227,8 +230,8 @@ def class_name(request):
     View to manually create class names based on GradeLevels and SchoolName
     """
     # Retrieve the SchoolAdminProfile for the logged-in user
-    school_admin_profile = get_object_or_404(SchoolAdminProfile, school_admin=request.user)
-    school = school_admin_profile.school  # This should be a SchoolProfile instance
+    profile = get_object_or_404(SchoolAdminProfile, school_admin=request.user)
+    school = profile.school  # This should be a SchoolProfile instance
     registered_school = SchoolProfile.objects.filter(school=school).first()
                                                # Ensure there's a current academic year defined
     try:
@@ -402,3 +405,48 @@ def schoolAdmin_profile(request, profile_id):
         'user': user,
     }
     return render(request, 'schoolconfig/update_schoolAdmin_profile.html', context)
+
+def setup_landing(request):
+    return render(request, 'schoolconfig/setup_landing.html')
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser or u.user_type == 'school_admin')
+def update_custom_user(request, user_id):
+    user = get_object_or_404(CustomUser, id=user_id)
+
+    if request.method == 'POST':
+        form = CustomUserUpdateForm(request.POST, instance=user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'User updated successfully.')
+            return redirect('user_detail', user_id=user.id)  # Redirect to user detail view
+    else:
+        form = CustomUserUpdateForm(instance=user)
+
+    context = {
+        'form': form,
+        'user': user,
+    }
+    return render(request, 'schoolconfig/update_custom_user.html', context)
+
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser or u.user_type == 'school_admin')
+def user_detail(request, user_id):
+    user = get_object_or_404(CustomUser, pk=user_id)
+    return render(request, 'schoolconfig/user_detail.html', {'user': user})
+
+
+
+@login_required
+def search_custom_user(request):
+    if request.method == 'GET':
+        form = CustomUserSearchForm(request.GET)
+        if form.is_valid():
+            query = form.cleaned_data['query']
+            users = CustomUser.objects.filter(email__icontains=query) | CustomUser.objects.filter(first_name__icontains=query) | CustomUser.objects.filter(last_name__icontains=query)
+            results = [{'id': user.id, 'name': f'{user.first_name} {user.last_name}', 'email': user.email} for user in users]
+            return JsonResponse({'results': results})
+    return JsonResponse({'results': []})

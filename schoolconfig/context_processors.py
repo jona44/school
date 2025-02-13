@@ -1,7 +1,8 @@
+import logging
 from district.models import SchoolHeadProfile
 from teacher.models import TeacherProfile
 from student.models import StudentProfile
-from schoolconfig.models import SchoolAdminProfile
+from schoolconfig.models import SchoolAdminProfile, SchoolProfile
 
 def get_user_school_profile(user):
     try:
@@ -29,11 +30,6 @@ def school_profile(request):
     return {}
 
 
-import logging
-from district.models import SchoolHeadProfile
-from teacher.models import TeacherProfile
-from student.models import StudentProfile
-from schoolconfig.models import SchoolAdminProfile, SchoolProfile
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +56,7 @@ def school_info(request):
     """
     context = {
         'school_logo_url': None,
-        'school_name': None,
+        'school': None,
     }
 
     if not request.user.is_authenticated:
@@ -69,10 +65,10 @@ def school_info(request):
     try:
         school = get_user_school_profile(request.user)
         if school:
-            context['school_name'] = school.name
+            context['school'] = school
             school_profile = SchoolProfile.objects.get(school=school)
-            if school_profile.logo:
-                context['school_logo_url'] = school_profile.logo.url
+            if school_profile.school_logo:
+                context['school_logo_url'] = school_profile.school_logo.url
     except SchoolProfile.DoesNotExist:
         logger.warning(f"SchoolProfile not found for school {school}")
     except Exception as e:

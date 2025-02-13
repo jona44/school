@@ -1,17 +1,24 @@
-{% load custom_tags %}
-<nav class=" position-fixed" style="height: 100px; width:100%">
-    <h1 class="display-3 pirata "> Secure High School </h1>
-  
-    <br>
-    <div class="bg3 p-1 d-flex justify-content-end" style="width: 100%;">
-        <span class="text-warning">{{ request.user }}&nbsp;&nbsp; </span>
-        {% if request.user  %}
-         <a href="{% url 'logout' %}" class="text-white me-3"><span class="badge bg-warning">Logout</span></a>
-         {% else %}
-        <a href="{% url 'login' %}" class="text-white me-3"><span class="badge bg-info">Login</span> </a>
-        {% endif %}
-    </div>
-    <div class="nav bg1"></div>
-    
+ {% load custom_tags %}
+<nav class=" position-fixed " style="height: 100px; width:100%">
+  <div class="bg3 p-1 d-flex justify-content-end " style="width: 100%;" id="logout">
+     <span class="text-warning">{{ request.user }}&nbsp;&nbsp; </span>
+     <a href="{% url 'logout' %}">Logout</a>
+  </div>
+  <div class=" d-flex" >
+    <div id="logo" >
+      <h1 class="display-3 pirata "> Secure High School </h1>
+      <h1 class="display-5">{{school}}</h1>
+      <hr>
+    </div>  
+    <div class="p-3">
+      {% if school_logo_url %}
+          <img src="{{ school_logo_url }}" alt="School Logo" class="img-fluid" style="max-height: 100px;">
+      {% else %}
+          <p>No school logo available</p>
+      {% endif %}
+    </div >   
+  </div>
 </nav>
+      
+
      

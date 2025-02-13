@@ -36,6 +36,8 @@ INSTALLED_APPS = [
     'grading',
     'district',
     'schoolconfig',
+    'debug_toolbar',
+    'django_extensions',
     
     
     'django.contrib.sites',  # Required by Allauth
@@ -57,6 +59,7 @@ AUTHENTICATION_BACKENDS = [
 
 
 MIDDLEWARE = [
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'district.middlewares.SetSchoolInSessionMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -144,6 +147,10 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+INTERNAL_IPS = [
+    '127.0.0.1',
+]
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
@@ -159,7 +166,7 @@ LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
 LOGIN_URL = '/login'
-LOGOUT_URL = '/sign-out'
+LOGOUT_URL = '/logout'
 
 CRISPY_TEMPLATE_PACK = 'uni_form'
 CRISPY_TEMPLATE_PACK = 'bootstrap5'

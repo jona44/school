@@ -5,6 +5,29 @@
 <div class="container mt-5">
     <h2>Welcome to the School Setup Process</h2>
     <p>To get started, click the button below to begin the setup process.</p>
-    <a href="{% url 'setup_step1' %}" class="btn btn-primary">Start Setup</a>
+    <a href="{% url 'school_profile_create_step1' %}" class="btn btn-primary">Start Setup</a>
+
+    <hr>
+
+    <h3>Setup Steps</h3>
+    <ol>
+        <li>Step 1: School Profile Creation</li>
+        <li>Step 2: Add Staff Members</li>
+        <li>Step 3: Configure Classes and Subjects</li>
+        <li>Step 4: Final Review and Submit</li>
+    </ol>
+
+    <hr>
+
+    <h3>Need Help?</h3>
+    <p>If you encounter any issues during the setup process, please contact our support team at <a href="mailto:support@schoolconfig.com">support@schoolconfig.com</a>.</p>
+
+    <hr>
+
+    <h3>Frequently Asked Questions</h3>
+    <p><strong>Q: How long does the setup process take?</strong></p>
+    <p>A: The setup process typically takes about 15-30 minutes.</p>
+    <p><strong>Q: Can I save my progress and continue later?</strong></p>
+    <p>A: Yes, you can save your progress at any step and continue later.</p>
 </div>
-{%end block%}
+{% endblock %}

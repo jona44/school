@@ -1,0 +1,26 @@
+{% extends 'partials/base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>User Details</h2>
+    <table class="table table-bordered">
+        <tr>
+            <th>Full Name</th>
+            <td>{{ user.first_name }} {{ user.last_name }}</td>
+        </tr>
+        <tr>
+            <th>Email</th>
+            <td>{{ user.email }}</td>
+        </tr>
+        <tr>
+            <th>User Type</th>
+            <td>{{ user.get_user_type_display }}</td>
+        </tr>
+        <tr>
+            <th>Date Joined</th>
+            <td>{{ user.date_joined }}</td>
+        </tr>
+    </table>
+    <a href="{% url 'update_custom_user' user.id %}" class="btn btn-warning">Edit User</a>
+</div>
+{% endblock %}

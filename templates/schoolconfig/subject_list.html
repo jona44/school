@@ -17,7 +17,12 @@
                         </li>
                         {% endfor %}
                     </ul>
-                    <a href="{% url 'create_schoolsubjects_step2' %} " class="btn bg3 text-white">Edit Subject List</a>
+                             {% if pk %}
+                            <a href="{% url 'edit_schoolsubjects' pk %}" class="btn btn-primary">Edit Subject List</a>
+                        {% else %}
+                            <p>No subjects available to edit.</p>
+                        {% endif %}
+                    {% comment %} <a href="{% url 'edit_schoolsubjects' pk %} " class="btn btn-primary">Edit Subject List</a> {% endcomment %}
                 <a href="{% url 'class_name'%}" class="btn btn-dark">next step 4</a>
             </div>
         </div>

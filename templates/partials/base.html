@@ -29,6 +29,36 @@
         </div> 
         
         <div>
+          <div class="modal fade" id="searchUserModal" tabindex="-1" aria-labelledby="searchUserModalLabel" aria-hidden="true">
+              <div class="modal-dialog modal-lg">
+                  <div class="modal-content">
+                      <div class="modal-header">
+                          <h5 class="modal-title" id="searchUserModalLabel">Search User</h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body">
+                          <form id="searchUserForm">
+                              <div class="input-group mb-3">
+                                  <input type="text" class="form-control" name="query" placeholder="Search for user...">
+                                  <button class="btn btn-primary" type="submit">Search</button>
+                              </div>
+                          </form>
+                          <table class="table table-striped">
+                              <thead>
+                                  <tr>
+                                      <th>Name</th>
+                                      <th>Email</th>
+                                      <th>Action</th>
+                                  </tr>
+                              </thead>
+                              <tbody id="searchResults">
+                                  <!-- Search results will be appended here -->
+                              </tbody>
+                          </table>
+                      </div>
+                  </div>
+              </div>
+          </div>          
           <div class="section position-fixed overflow-y-auto" style="height:80vh;">
             <div class="">{% if messages %}  {% for message in messages %} 
               <div class="alert alert-{{ message.tags }} col-8 offset-md-1">
@@ -43,7 +73,42 @@
         </div>
       </div>
    </div>
-  
+  <script>
+        document.addEventListener('DOMContentLoaded', function () {
+        const searchUserForm = document.getElementById('searchUserForm');
+        const searchResults = document.getElementById('searchResults');
+    
+        searchUserForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+            const query = searchUserForm.querySelector('input[name="query"]').value;
+    
+            fetch(`/search_custom_user/?query=${query}`)
+                .then(response => response.json())
+                .then(data => {
+                    searchResults.innerHTML = '';
+                    data.results.forEach(user => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${user.name}</td>
+                            <td>${user.email}</td>
+                            <td>
+                                <button type="button" class="btn btn-primary select-user" data-user-id="${user.id}" data-user-name="${user.name}">Select</button>
+                            </td>
+                        `;
+                        searchResults.appendChild(row);
+                    });
+    
+                    document.querySelectorAll('.select-user').forEach(button => {
+                        button.addEventListener('click', function () {
+                            const userId = this.getAttribute('data-user-id');
+                            window.location.href = `/update_custom_user/${userId}/`;
+
+                        });
+                    });
+                });
+        });
+    });
+  </script>
  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
