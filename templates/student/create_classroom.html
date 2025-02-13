@@ -2,18 +2,25 @@
 {% load crispy_forms_tags %}
 
 {% block content %}
-
-<div class="col-md-6 offset-2 rounded p-5  border shadow mt-5 ">
+<div class=" container d-flex gap-2">
+<div class="col-md-6  rounded p-5  border shadow mt-5 ">
     <h2 class="text-center  ">Create ClassRoom </h2>
       <hr class="text-success">
         <form method="post">
             {% csrf_token %}
                 {{ form|crispy}}
-            <div class="d-grid">
-                <button type="submit" class="btn btn-dark ">Create Class</button>
-            </div>
+            
+                <button type="submit" class="btn btn-primary">Save and Create Another</button>
+                <a href="{% url 'setup_step7' %}" class="btn btn-dark ">Next</a>  
             
         </form>
 </div>
-
+<div class="col-md-4 rounded p-5  border shadow mt-5 ">
+  {% for class in klass %}
+   <ol>
+    <li>{{class}}</li>
+   </ol>
+   {% endfor %}
+</div>
+</div>
 {% endblock %}

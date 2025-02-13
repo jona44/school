@@ -117,10 +117,10 @@ def dashboard(request):
             # Query SchoolProfile using the school from SchoolAdminProfile
             school_profile = SchoolProfile.objects.filter(school=profile.school).first()
             if not school_profile:
-                return redirect('school_profile_create_step1')
+                return redirect('setup_landing')
 
             if not school_profile.is_setup_complete:
-                return redirect('school_profile_create_step1')
+                return redirect('setup_landing')
 
             # Collect dashboard data using optimized queries
             school_data = SchoolProfile.objects.filter(school=profile.school).annotate(

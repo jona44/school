@@ -59,3 +59,21 @@ class SchoolAdminProfileForm(forms.ModelForm):
             'profile_picture',
             
         ]
+
+
+class CustomUserUpdateForm(forms.ModelForm):
+    class Meta:
+        model = CustomUser
+        fields = ['email', 'first_name', 'last_name', 'user_type', 'is_active']
+        widgets = {
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'user_type': forms.Select(attrs={'class': 'form-select'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }   
+       
+        
+class CustomUserSearchForm(forms.Form):
+    query = forms.CharField(max_length=100, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Search for user...'}))        
+        

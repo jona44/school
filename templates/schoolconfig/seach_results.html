@@ -1,0 +1,9 @@
+{% for user in results %}
+<tr>
+    <td>{{ user.name }}</td>
+    <td>{{ user.email }}</td>
+    <td>
+        <button type="button" class="btn btn-primary select-user" data-user-id="{{ user.id }}" data-user-name="{{ user.name }}">Select</button>
+    </td>
+</tr>
+{% endfor %}
