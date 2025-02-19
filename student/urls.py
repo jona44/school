@@ -29,6 +29,8 @@ urlpatterns = [
     path('student/undo-transfer/<int:pk>/', views.undo_transfer, name='undo_transfer'),
     path('suspense-pool/', views.suspense_pool, name='suspense_pool'),
     path('accept-student/<int:student_profile_id>/', views.accept_student, name='accept_student'),
+    
+    path('submit/<int:assignment_id>/', views.submit_assignment, name='submit_assignment'),
 
     
 

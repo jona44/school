@@ -1,0 +1,56 @@
+{% extends "partials/base.html" %}
+{% load crispy_forms_tags %}
+
+
+
+
+{% block content %}
+<div class="container offset-md-1 mt-4">  {# Bootstrap container with top margin #}
+    <h1 class="mb-4">Welcome to Your Student Dashboard</h1>  {# Margin bottom for spacing #}
+
+    <div class="card mb-4">  {# Bootstrap card for class info section with margin bottom #}
+        <div class="card-header bg-primary text-white">  {# Card header with primary background and white text #}
+            <h2 class="card-title">Class Information</h2>  {# Card title inside header #}
+        </div>
+        <div class="card-body d-flex">  {# Card body for content #}
+            {% if assigned_class %}
+                <p class="card-text"><strong>Your Class:</strong> {{ assigned_class.name }}</p>  {# Card text style for paragraph #}
+            {% else %}
+                <p class="card-text text-muted">You are not currently assigned to a class.</p> {# Muted text for less important info #}
+            {% endif %}
+            <a href="">My Profile</a>
+        </div>
+    </div>
+
+    <div class="card">  {# Bootstrap card for classmates info section #}
+        <div class="card-header bg-info text-white">  {# Card header with info background and white text #}
+            <h2 class="card-title">Classmates Information</h2>  {# Card title inside header #}
+        </div>
+        <div class="card-body">  {# Card body for content #}
+            {% if classmates_count > 0 %}
+                <p class="card-text"><strong>Total Classmates:</strong> <span class="badge bg-secondary">{{ classmates_count }}</span></p> {# Badge to highlight count #}
+                <p class="card-text"><strong>Female Classmates:</strong> <span class="badge bg-pink text-white">{{ female_classmates }}</span></p> {# Badge with pink background #}
+                <p class="card-text"><strong>Male Classmates:</strong> <span class="badge bg-primary">{{ male_classmates }}</span></p> {# Badge with primary background #}
+            {% else %}
+                <p class="card-text text-muted">No classmates information available.</p> {# Muted text for no info #}
+            {% endif %}
+        </div>
+    </div>
+    <div class="card mt-4">  {# Bootstrap card for classmates info section #}
+        <div class="card-header bg-success text-white">  {# Card header with info background and white text #}
+            <h2 class="card-title">Subjects</h2>  {# Card title inside header #}
+        </div>
+        <div class="card-body">  {# Card body for content #}
+            <ul class="list-unstyled">  {# Remove list styles #}
+                {% for school_subject in subjects %}
+                    <li>
+                        {% for subject in school_subject.subjects.all %}
+                            <a href="{% url 'assignments_list' subject.id %}" class="text-decoration-none d-block py-1">{{ subject.id }}-{{subject}}</a>  {# Link without underline and block display with padding #}
+                        {% endfor %}
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

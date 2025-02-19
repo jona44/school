@@ -6,7 +6,7 @@
     <div class="col-md-8    rounded p-3 rounded">
         <h3 > Subject Form</h3>
         {% for subject in all_subjects%}
-        <span class="badge bg-dark">{{subject}}</span>
+        <span class="badge bg-dark">{{subject.id}}--{{subject}}</span>
         {%endfor%}
         <form method="post">
             {% csrf_token %}

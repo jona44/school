@@ -5,6 +5,22 @@ from student.models import  StudentProfile
 from teacher.models import TeacherProfile
 from schoolconfig.models import  SchoolAdminProfile, SchoolProfile
 
+def get_teacher_profile(user):
+    """
+    Retrieves the teacher profile for a given user.
+
+    Args:
+        user: The user object.
+
+    Returns:
+        The TeacherProfile object if found, otherwise None.
+    """
+    if user.groups.filter(name='teacher').exists():
+        try:
+            return TeacherProfile.objects.get(teacher=user)
+        except TeacherProfile.DoesNotExist:
+            return None
+    return None
 
 def get_user_school(user):
     # Check for user type and return the corresponding school attribute

@@ -1,0 +1,40 @@
+{% extends 'partials/teacher-base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+<div class="container mt-5">
+   <h2>Assignments for <span class="text-muted">subject id : {{ subject.id }} {{ subject }}</span> </h2>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Title</th>
+                    <th>Subject</th>
+                    <th>Description</th>
+                    <th>Due Date</th>
+                    <th>Created At</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for assignment in assignments %}
+                <tr>
+                    <td>{{ assignment.id }}</td>
+                    <td>{{ assignment.title }}</td>
+                    <td>{{ assignment.subject.id }} {{ assignment.subject }}</td>
+                    <td>{{ assignment.description }}</td>
+                    <td>{{ assignment.due_date|date:"Y-m-d H:i" }}</td>
+                    <td>{{ assignment.created_at|date:"Y-m-d H:i" }}</td>
+                    <td><a href="{% url 'submit_assignment' assignment.id %}">submit</a></td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center">No assignments found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+</div>
+{% endblock %} 
+

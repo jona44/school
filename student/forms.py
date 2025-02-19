@@ -6,7 +6,7 @@ from customadmin.models import CustomUser
 from schoolconfig.models import Subjects ,SchoolAdminProfile
 from .models import *
 from django.http import HttpResponseRedirect
-
+from teacher.models import Assignment, AssignmentSubmission
 
 class StudentRegistrationForm(UserCreationForm):
     class Meta:
@@ -232,3 +232,13 @@ class ExtraCurricularActivityForm(forms.ModelForm):
 class JoinActivityForm(forms.Form):
    
     activity_id = forms.ModelChoiceField(queryset=ExtraCurricularActivity.objects.all(), label="Activity")
+    
+
+
+
+
+class AssignmentSubmissionForm(forms.ModelForm):
+    class Meta:
+        model = AssignmentSubmission
+        fields = ['file']
+       

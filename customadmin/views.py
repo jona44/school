@@ -3,10 +3,9 @@ from multiprocessing import context
 from django import views
 from django.views import View
 from django.db.models import Count, Q
-from django.http import HttpResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth.decorators import login_required
-from customadmin.models import CustomUser
+from .models import CustomUser
 from django.contrib.auth.models import Group
 from django.contrib import messages
 from django.core.mail import send_mail
@@ -18,9 +17,9 @@ from django.contrib.auth import get_user_model
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required, user_passes_test
-from schoolconfig.models import SchoolProfile, SchoolSubject ,SchoolAdminProfile
+from schoolconfig.models import SchoolProfile, SchoolSubject, SchoolAdminProfile
 from teacher.models import TeacherProfile
-from student.models import ClassRoom, StudentProfile
+from student.models import StudentProfile
 
 from . forms import *
 import logging
@@ -39,7 +38,7 @@ def dashboard(request):
         try:
             student_profile = StudentProfile.objects.get(student=user)
             school = student_profile.school
-            
+            subjects = SchoolSubject.objects.filter(school=school)
             # Get Student's Class
             assigned_class = student_profile.assigned_class
             if assigned_class:
@@ -51,6 +50,7 @@ def dashboard(request):
                 context['female_classmates'] = female_classmates.count()
                 context['male_classmates'] = male_classmates.count()
                 context['assigned_class'] = assigned_class
+                context['subjects'] = subjects
                 
                 return render(request, 'customadmin/dashboard/student_dashboard.html', context)
 
@@ -97,7 +97,6 @@ def dashboard(request):
        
 #---------------------------------school_admin dashboard---------------------------------------
 
-    
     elif request.user.groups.filter(name='school_admin').exists():
         try:
             logger.info(f"User {request.user} is in 'school_admin' group.")
@@ -117,10 +116,10 @@ def dashboard(request):
             # Query SchoolProfile using the school from SchoolAdminProfile
             school_profile = SchoolProfile.objects.filter(school=profile.school).first()
             if not school_profile:
-                return redirect('setup_landing')
+                return redirect('school_profile_create_step1')
 
             if not school_profile.is_setup_complete:
-                return redirect('setup_landing')
+                return redirect('school_profile_create_step1')
 
             # Collect dashboard data using optimized queries
             school_data = SchoolProfile.objects.filter(school=profile.school).annotate(
@@ -151,8 +150,7 @@ def dashboard(request):
         except Exception as e:
                 logger.error(f"Error processing the school admin dashboard: {str(e)}", exc_info=True)
                 context['error'] = "An unexpected error occurred. Please try again later."
-                return render(request, 'customadmin/dashboard/school_admin_dashboard.html', context)
-#-----------------------------------------deputy_head dashboard-------------------------------------------     
+                return render(request, 'customadmin/dashboard/school_admin_dashboard.html', context)#-----------------------------------------deputy_head dashboard-------------------------------------------     
     
 
     elif request.user.groups.filter(name='deputy_head').exists():

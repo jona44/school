@@ -155,29 +155,24 @@ def select_school_subjects_step2(request):
 
     Ensures each SchoolSubject instance is created per subject.
     """
-    # Get the school admin profile for the logged-in user
     school_admin_profile = get_object_or_404(SchoolAdminProfile, school_admin=request.user)
-    # Get the registered school related to the logged-in school admin
     registered_school = school_admin_profile.school
 
     if request.method == 'POST':
         form = SchoolSubjectForm(request.POST)
         if form.is_valid():
             subjects = form.cleaned_data['school_subjects']
-            
-            try:
-                school_profile = SchoolProfile.objects.get(school=registered_school)
-            except SchoolProfile.DoesNotExist:
-                return render(request, 'schoolconfig/error.html', {'message': 'School profile does not exist.'})
 
-            # Delete existing SchoolSubject instances for this school profile
+            # Ensure the school profile exists
+            school_profile, _ = SchoolProfile.objects.get_or_create(school=registered_school)
+
+            # Delete existing subject relations (optional: only remove subjects not in the new selection)
             SchoolSubject.objects.filter(school=school_profile).delete()
 
-            # Create new SchoolSubject instances for each subject
-            for subject in subjects:
-                school_subject = SchoolSubject.objects.create(school=school_profile)
-                school_subject.subjects.set([subject])
-                school_subject.save()
+            # Create a SchoolSubject instance and assign subjects properly
+            school_subject = SchoolSubject.objects.create(school=school_profile)
+            school_subject.subjects.add(*subjects)
+            school_subject.save()
 
             return redirect('subject_list')
     else:
@@ -206,19 +201,24 @@ def subject_list(request, pk=None):
 @login_required
 @user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='school_admin').exists())
 def edit_schoolsubjects(request, pk):
-    school_subject = SchoolSubject.objects.get(pk=pk)
+    school_subject = get_object_or_404(SchoolSubject, pk=pk)
+
+    # Ensure the logged-in admin can only edit subjects from their school
+    profile = get_object_or_404(SchoolAdminProfile, school_admin=request.user)
+    if school_subject.school != profile.school:
+        return render(request, 'schoolconfig/error.html', {'message': 'Unauthorized access.'})
 
     if request.method == 'POST':
         form = SchoolSubjectForm(request.POST, instance=school_subject)
         if form.is_valid():
             edited = form.save(commit=False)
             edited.save()
-            return redirect('subject_list')  # Replace with your success URL
+            form.save_m2m()  # Ensure ManyToMany relations are saved
+            return redirect('subject_list')  # Update with actual URL name
     else:
         form = SchoolSubjectForm(instance=school_subject)
 
     return render(request, 'schoolconfig/edit_schoolsubjects.html', {'form': form})
-
 
 #-----------------------------------ClassName----------------------------------------
 
