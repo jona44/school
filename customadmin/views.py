@@ -30,69 +30,79 @@ logger = logging.getLogger(__name__)
 def dashboard(request):
     user = request.user
     context = {}
-    print(f"User: {user.email}, Groups: {user.groups.all()}")  # Debugging statement:
+    # print(f"User: {user.email}, Groups: {user.groups.all()}")  # Debugging statement:
 
 #--------------------------------------Student Dashboard---------------------------------------
-       
+
     if request.user.groups.filter(name='student').exists():
         try:
-            student_profile = StudentProfile.objects.get(student=user)
+            student_profile = StudentProfile.objects.get(student=request.user)
             school = student_profile.school
-            subjects = SchoolSubject.objects.filter(school=school)
-            # Get Student's Class
             assigned_class = student_profile.assigned_class
+
             if assigned_class:
-                class_students = assigned_class.students.filter(school=school)  # Filter classmates by school
+                # Get subjects from the ClassProfile instead of SchoolSubject
+                class_profile = assigned_class.profile
+                subjects = class_profile.subjects.all() if class_profile else []
+
+                # Get classmates within the same school
+                class_students = assigned_class.students.filter(school=school)
                 female_classmates = class_students.filter(gender='female')
                 male_classmates = class_students.filter(gender='male')
-                classmates_count = class_students.count()
-                context['classmates_count'] = classmates_count
-                context['female_classmates'] = female_classmates.count()
-                context['male_classmates'] = male_classmates.count()
-                context['assigned_class'] = assigned_class
-                context['subjects'] = subjects
-                
+
+                # Populate context
+                context.update({
+                    'classmates_count': class_students.count(),
+                    'female_classmates': female_classmates.count(),
+                    'male_classmates': male_classmates.count(),
+                    'assigned_class': assigned_class,
+                    'subjects': subjects
+                })
+
                 return render(request, 'customadmin/dashboard/student_dashboard.html', context)
 
         except StudentProfile.DoesNotExist:
             pass
-        
+
+        return render(request, 'customadmin/dashboard/student_dashboard.html', context)
+
 #-----------------------------------------Teacher Dashboard-------------------------------------
 
-    elif request.user.groups.filter(name='teacher').exists():
-        try:
-            profile = TeacherProfile.objects.get(teacher=request.user)
-            school =  profile.school
-            my_assigned_class = profile.assigned_class
-            
-            # Get Classes and Students for Teacher
-            my_classes = profile.classes_taught.all()
-            my_classes_students = []
-            for class_ in my_classes:
-                students = class_.students.all()
-                female_students = students.filter(gender='female')
-                male_students = students.filter(gender='male')
-                students_count = students.count()
-                my_classes_students.append({
-                    'class_': class_,
-                    'students': students,
-                    'female_students': female_students,
-                    'students_count': students_count,
-                    'male_students': male_students,
-                })
-            
-            context = {
-                'my_classes_students': my_classes_students,
-                'my_subjects': profile.subjects_taught.all(),
-                'my_assigned_class':my_assigned_class
-            }
 
-            return render(request, 'customadmin/dashboard/teacher_dashboard.html', context)
+    if request.user.groups.filter(name='teacher').exists():
+            try:
+                profile = TeacherProfile.objects.get(teacher=request.user)
+                school =  profile.school
+                my_assigned_class = profile.assigned_class
+                
+                # Get Classes and Students for Teacher
+                my_classes = profile.classes_taught.all()
+                my_classes_students = []
+                for class_ in my_classes:
+                    students = class_.students.all()
+                    female_students = students.filter(gender='female')
+                    male_students = students.filter(gender='male')
+                    students_count = students.count()
+                    my_classes_students.append({
+                        'class_': class_,
+                        'students': students,
+                        'female_students': female_students,
+                        'students_count': students_count,
+                        'male_students': male_students,
+                    })
+                
+                context = {
+                    'my_classes_students': my_classes_students,
+                    'my_subjects': profile.subjects_taught.all(),
+                    'my_assigned_class':my_assigned_class
+                }
 
-        except TeacherProfile.DoesNotExist:
-            logger.error("TeacherProfile does not exist for user: %s", request.user)
-            messages.error(request, "Teacher profile not found.")
-            return redirect('error_page')  # Replace 'error_page' with the actual error page URL name
+                return render(request, 'customadmin/dashboard/teacher_dashboard.html', context)
+
+            except TeacherProfile.DoesNotExist:
+                logger.error("TeacherProfile does not exist for user: %s", request.user)
+                messages.error(request, "Teacher profile not found.")
+                return redirect('error_page')  # Replace 'error_page' with the actual error page URL name
 
        
 #---------------------------------school_admin dashboard---------------------------------------
@@ -116,10 +126,10 @@ def dashboard(request):
             # Query SchoolProfile using the school from SchoolAdminProfile
             school_profile = SchoolProfile.objects.filter(school=profile.school).first()
             if not school_profile:
-                return redirect('school_profile_create_step1')
+                return redirect('setup_landing')
 
             if not school_profile.is_setup_complete:
-                return redirect('school_profile_create_step1')
+                return redirect('setup_landing')
 
             # Collect dashboard data using optimized queries
             school_data = SchoolProfile.objects.filter(school=profile.school).annotate(
@@ -160,20 +170,28 @@ def dashboard(request):
     elif request.user.groups.filter(name='school_head').exists():
                 # Show school_head_dashboard
         return render(request, 'customadmin/dashboard/school_head_dashboard.html')
+    
+    #----------------------------------------------------------------------------------------
         
     elif request.user.groups.filter(name='district_admin').exists():
-                # Show school_head_dashboard
+        # Show district_admin_dashboard
         return render(request, 'customadmin/dashboard/district_admin_dashboard.html')
+    
     else:
-                # Show default dashboard
-        return render(request, 'customadmin/dashboard/default_dashboard.html')
+        # Check if there is any district admin, if not, redirect to secure high school setup
+        if not CustomUser.objects.filter(groups__name='district_admin').exists():
+            return redirect('register_district_admin')
+    
+    #----------------------------------------------------------------------------------------
+    # Show default dashboard
+    return render(request, 'customadmin/dashboard/district_admin_dashboard.html')
     
 
 @login_required
 def login_redirect(request):
     user = request.user
     print(f"User: {user.email}, Groups: {user.groups.all()}")
-      # Debugging statement
+    # Debugging statement
     if request.user.groups.filter(name='student').exists():
         return redirect('student_dashboard')
     
@@ -192,10 +210,12 @@ def login_redirect(request):
     elif request.user.groups.filter(name='district_admin').exists():
         return redirect('district_admin_dashboard')
     
+    elif request.user.is_superuser:
+        return redirect('district_admin_dashboard')
+    
     else:
         return redirect('default_dashboard')
-
-   
+    
 def  registration_complete(request):
     return render(request,'customadmin/registration_complete.html')
 

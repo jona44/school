@@ -4,10 +4,63 @@
 <title>School Admin Profile</title>
 
 {% block content %}
+<div class="container">
   <h2>School Admin Profile</h2>
   <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
-    {{ form|crispy }}
-    <button type="submit">Update Profile</button>
+   
+    <div class="d-flex">
+      <div class="col">
+        <label for="id_email" class="form-label requiredField">
+          Email<span class="asteriskField">*</span>
+        </label>
+      
+      </div>
+      <div class="col">
+        <label for="id_contact_number" class="form-label requiredField">
+          Contact Number<span class="asteriskField">*</span>
+        </label>
+        {{ form.contact_number }}
+      </div>
+    </div>
+    <div class="row">
+      <div class="col">
+        <label for="id_school" class="form-label requiredField">
+          School<span class="asteriskField">*</span>
+        </label>
+        {{ form.school }}
+      </div>
+      <div class="col">
+        <label for="id_admin" class="form-label requiredField">
+          Admin<span class="asteriskField">*</span>
+        </label>
+        {{ form.admin }}
+      </div>
+    </div>
+    <div class="row">
+      <div class="col">
+        <label for="id_address" class="form-label requiredField">
+          Address<span class="asteriskField">*</span>
+        </label>
+        {{ form.address }}
+      </div>
+      <div class="col">
+        <label for="id_date_of_birth" class="form-label requiredField">
+          Date of Birth<span class="asteriskField">*</span>
+        </label>
+        {{ form.date_of_birth }}
+      </div>
+    </div>
+    <div class="row">
+      <div class="col">
+        <label for="id_profile_picture" class="form-label requiredField">
+          Profile Picture<span class="asteriskField">*</span>
+        </label>
+        {{ form.profile_picture }}
+      </div>
+    </div>
+    <button type="submit" class="btn btn-primary">Update Profile</button>
+  </div>
   </form>
+</div>
 {% endblock %}

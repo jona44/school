@@ -4,14 +4,15 @@
 
 
 <div class="d-flex flex-column sidebar fixed mt-5 sidebar-custom">
-  <div class="p-3">
+  <div class="p-3 text-center">
     {% if school_logo_url %}
-        <img src="{{ school_logo_url }}" alt="School Logo" class="img-fluid" style="max-height: 100px;">
-    {% else %}
-        <p>No school logo available</p>
+      <img src="{{ school_logo_url }}" alt="School Logo" class="img-fluid" style="max-height: 150px;">
+      {% else %}
+      <img src="media/default_logo/department of Education logo.png" alt="School Logo" class="img-fluid" style="max-height: 150px;">
+      <p>Department of Education</p>
     {% endif %}
-    <h1 class="display-6">{{ school}}</h1>
-  </div >       
+    <h1 class="display-6">{{ school|default:"District" }}</h1>
+  </div>
 
   <hr>
   <ul class="nav nav-pills flex-column mb-auto">
@@ -124,17 +125,24 @@
 
     {% endif %}
 
-
-    {% if user.user_type == 'district_admin' %}
-      <li>
-        <a href="{% url 'subject' %}"  class="nav-link">
-          <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="">
-            <path d="M0 0h24v24H0V0z" fill="none"/>
-            <path d="M14 17H4v2h10v-2zm6-8H4v2h16V9zM4 15h16v-2H4v2zM4 5v2h16V5H4z"/>
-          </svg> Subject
-        </a>
-      </li>
-      <li>
+    {% if user.user_type == 'district_admin' or user.is_superuser %}
+    <li>
+        <li>
+          <a href="{% url 'subject' %}"  class="nav-link">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="">
+              <path d="M0 0h24v24H0V0z" fill="none"/>
+              <path d="M14 17H4v2h10v-2zm6-8H4v2h16V9zM4 15h16v-2H4v2zM4 5v2h16V5H4z"/>
+            </svg> Subject
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'grade_level' %}"  class="nav-link">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="">
+              <path d="M0 0h24v24H0V0z" fill="none"/>
+              <path d="M14 17H4v2h10v-2zm6-8H4v2h16V9zM4 15h16v-2H4v2zM4 5v2h16V5H4z"/>
+            </svg> Grade Level
+          </a>
+        </li>
         <a href="{% url 'create_academic_calendar'%}"  class="nav-link">
           <svg xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill=""><g>
             <rect fill="none" height="24" width="24"/></g><g>
@@ -193,7 +201,15 @@
           <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="">
             <path d="M0 0h24v24H0V0z" fill="none"/>
             <path d="M4 10.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zm0-6c-.83 0-1.5.67-1.5 1.5S3.17 7.5 4 7.5 5.5 6.83 5.5 6 4.83 4.5 4 4.5zm0 12c-.83 0-1.5.68-1.5 1.5s.68 1.5 1.5 1.5 1.5-.68 1.5-1.5-.67-1.5-1.5-1.5zM7 19h14v-2H7v2zm0-6h14v-2H7v2zm0-8v2h14V5H7z"/>
-          </svg> create_district
+          </svg> Create District
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'create_group' %}"  class="nav-link">
+          <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="">
+            <path d="M0 0h24v24H0V0z" fill="none"/>
+            <path d="M4 10.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zm0-6c-.83 0-1.5.67-1.5 1.5S3.17 7.5 4 7.5 5.5 6.83 5.5 6 4.83 4.5 4 4.5zm0 12c-.83 0-1.5.68-1.5 1.5s.68 1.5 1.5 1.5 1.5-.68 1.5-1.5-.67-1.5-1.5-1.5zM7 19h14v-2H7v2zm0-6h14v-2H7v2zm0-8v2h14V5H7z"/>
+          </svg> Create Group
         </a>
       </li>
       {% endif %}

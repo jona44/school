@@ -88,7 +88,6 @@ class UpdateStaffProfileForm(forms.ModelForm):
             'contact_number': forms.TextInput(attrs={
                 'class': 'form-control',
                }),
-
             
             'assigned_class': forms.Select(attrs={
                 'class': 'form-control', 'style': 'width:150px',

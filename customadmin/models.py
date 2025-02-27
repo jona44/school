@@ -6,6 +6,8 @@ from django.contrib.auth.hashers import make_password
 import random
 import string
 
+def generate_unique_token():
+    return ''.join(random.choices(string.ascii_letters + string.digits, k=20))
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, first_name, last_name,  password=None, **extra_fields):
@@ -31,30 +33,45 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         ('district_admin', 'DISTRICT_ADMIN'),
     )
 
-
     email       = models.EmailField(unique=True)
     first_name  = models.CharField(max_length=30)
     last_name   = models.CharField(max_length=30)
-   
     user_type   = models.CharField(max_length=30, choices=USER_TYPE)
     is_active   = models.BooleanField(default=True)
     is_staff    = models.BooleanField(default=False)
     is_school_superuser = models.BooleanField(default=False)
+    created_by  = models.ForeignKey(
+        'self', null=True, blank=True, 
+        on_delete=models.SET_NULL, 
+        related_name='created_students'
+    )  # Track who registered the student
+
     objects     = CustomUserManager()
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = []
+    REQUIRED_FIELDS = ['first_name', 'last_name']
 
-    def save(self, *args, **kwargs):
-        if not self.pk:  # Only on creation
-            # Generate a random password
-            password_length = 12  # Or whatever length you prefer
-            random_password = ''.join(random.choice(string.ascii_letters + string.digits) for i in range(password_length))
-            # Hash the password and set it as unusable
-            self.password = make_password(random_password) # sets the password and hashes it
-            self.is_active=False # account is not active until the user sets the password
 
-        super().save(*args, **kwargs)
+import random
+import string
+from django.contrib.auth.hashers import make_password
+
+def save(self, *args, **kwargs):
+    if not self.pk:  # Only on creation
+        if not getattr(self, "is_superuser", False):  # Skip for superusers
+            random_password = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
+            self.activation_token = generate_unique_token()  # Ensure this function exists
+            self.set_unusable_password()
+            self.is_active = False  # Account not active until user sets password
+            # Send activation email logic here...
+        else:  # Superuser creation
+            if not self.password:  # Ensure password is set manually if not provided
+                random_password = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
+                self.password = make_password(random_password)  # Hash random password
+            self.is_active = True  # Superuser is immediately active
+
+    super().save(*args, **kwargs)
+
 
     def __str__(self):
         return f'{self.first_name} {self.last_name}'

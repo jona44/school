@@ -45,25 +45,13 @@ def holiday_update(request, pk):
         form = HolidayForm(instance=holiday)
     return render(request, 'district/update_holiday.html', {'form': form})
 
-#-----------------------------------------------------------
-
-@login_required
-@user_passes_test(lambda u: u.is_superuser or u.user_type == 'district_admin')
-def holiday_delete(request, pk):
-    holiday = get_object_or_404(Holiday, pk=pk)
-    if request.method == "POST":
-        holiday.delete()
-        return redirect('holiday_list')
-    return render(request, 'holidays/holiday_confirm_delete.html', {'holiday': holiday})
-
-#-----------------------------------------------
 
 
 @login_required
 @user_passes_test(lambda u: u.is_superuser or u.user_type == 'district_admin')
-def academic_calendar_list(request):
+def academic_calendar_detail(request):
     calendars = AcademicCalendar.objects.all()
-    return render(request, 'district/academic_calendar_list.html', {'calendars': calendars})
+    return render(request, 'district/academic_calendar_detail.html', {'calendars': calendars})
 
 #-------------------------------------------
 
@@ -71,21 +59,25 @@ def academic_calendar_list(request):
 @login_required
 @user_passes_test(lambda u: u.is_superuser or u.user_type == 'district_admin')
 def create_academic_calendar(request):
+    # Check if an AcademicCalendar instance already exists
+    existing_calendar = AcademicCalendar.objects.first()
+    
+    if existing_calendar:
+        # If a calendar exists, redirect to update view
+        return redirect('academic_calendar_update', pk=existing_calendar.pk)
+    
     if request.method == "POST":
         form = AcademicCalendarForm(request.POST)
         if form.is_valid():
             academic_calendar = form.save()  # Save the form data
             messages.success(request, 'Academic calendar created successfully!')
             # Example of a more specific redirect (if you have a calendar detail view)
-            # return redirect('calendar_detail', calendar_id=academic_calendar.id)
-            return redirect('district_admin_dashboard')
+            return redirect('academic_calendar_detail')
         else:
-            # Form is invalid, re-render with errors
             return render(request, 'district/create_academic_calendar.html', {'form': form})
     else:
         form = AcademicCalendarForm()
     return render(request, 'district/create_academic_calendar.html', {'form': form})
-
 #------------------------------------------
 
 @login_required
@@ -96,18 +88,10 @@ def academic_calendar_update(request, pk):
         form = AcademicCalendarForm(request.POST, instance=calendar)
         if form.is_valid():
             form.save()
-            return redirect('academic_calendar_list')
+            return redirect('academic_calendar_detail')
     else:
         form = AcademicCalendarForm(instance=calendar)
-    return render(request, 'district/academic_calendar_update.html', {'form': form})
+    return render(request, 'district/create_academic_calendar.html', {'form': form})
 
 #--------------------------------------------
 
-@login_required
-@user_passes_test(lambda u: u.is_superuser or u.user_type == 'district_admin')
-def academic_calendar_delete(request, pk):
-    calendar = get_object_or_404(AcademicCalendar, pk=pk)
-    if request.method == "POST":
-        calendar.delete()
-        return redirect('academic_calendar_list')
-    return render(request, 'district/academic_calendar_confirm_delete.html', {'calendar': calendar})

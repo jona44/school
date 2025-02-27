@@ -3,23 +3,31 @@ from django.db import models
 from customadmin.models import CustomUser
 
 
-class District(models.Model):
-    district = models.CharField(max_length=255,blank=True, null=True)
-    
-    def __str__(self):
-        return f'{self.district}' 
+from django.conf import settings
 
+class District(models.Model):
+    district = models.CharField(max_length=255, unique=True)  # Ensure district names are unique
+    # Track when the district was created
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)  # Track who created the district
+
+    def __str__(self):
+        return self.district
+
+
+
+from django.conf import settings
 
 class District_School_Registration(models.Model):
-   
-    district      = models.ForeignKey(District,on_delete=models.CASCADE,blank=True, null=True)
-    school        = models.CharField(max_length=255,blank=True, null=True)
+    district      = models.ForeignKey(District, on_delete=models.CASCADE, blank=True, null=True)
+    school        = models.CharField(max_length=255, blank=True, null=True)
     address       = models.TextField(blank=True, null=True)
-    phone_number  = models.CharField(max_length=20,blank=True, null=True)
+    phone_number  = models.CharField(max_length=20, blank=True, null=True)
     email         = models.EmailField(blank=True, null=True)
-   
+    created_by    = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)  # Track who created the school registration
+
     def __str__(self):
-        return f'{self.school}' 
+        return f'{self.school}'
+ 
 
 
 class DistrictAdminProfile(models.Model):
@@ -35,22 +43,26 @@ class DistrictAdminProfile(models.Model):
     
     
     
+from django.conf import settings
+
 class SchoolHeadProfile(models.Model):
     school_head    = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='SchoolHead_profile')
-    contact_number   =  models.CharField(max_length=255,blank=True, null=True)
+    contact_number = models.CharField(max_length=255, blank=True, null=True)
     email          = models.EmailField(blank=True, null=True)
-    school         = models.ForeignKey(District_School_Registration, on_delete=models.CASCADE,blank=True, null=True)
-    address        = models.CharField(max_length=255,blank=True, null=True)
+    school         = models.ForeignKey(District_School_Registration, on_delete=models.CASCADE, blank=True, null=True)
+    address        = models.CharField(max_length=255, blank=True, null=True)
     date_of_birth  = models.DateField(blank=True, null=True)
-    profile_picture = models.ImageField(upload_to='school_head_profiles/',blank=True, null=True)
+    profile_picture = models.ImageField(upload_to='school_head_profiles/', blank=True, null=True)
     date_created    = models.DateTimeField(auto_now_add=True)
     last_updated    = models.DateTimeField(auto_now=True)
     is_complete     = models.BooleanField(default=False)
-    head            = models.CharField(max_length=10,choices=[('head1','head1'),('head2','head2')],null=True,blank=True)
-     
-    
+
+    # Additional field to track who created the profile
+    created_by      = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+
     def __str__(self):
-        return f'{self.school_head}' 
+        return f'{self.school_head.first_name} {self.school_head.last_name} - {self.school}'
+
         
         
 class Subjects(models.Model):

@@ -65,6 +65,7 @@ def student_registration(request):
             user = form.save(commit=False)
             user.is_active = False  # Set user as inactive until activation
             user.user_type = 'student'  # Set user_type to teacher
+            user.created_by = request.user 
             user.save()
 
             # Log user ID and email
@@ -106,7 +107,6 @@ def student_registration(request):
 #----------------------------------create_student_profile--------------------------------
 
 
-
 @login_required
 @user_passes_test(lambda u: u.is_superuser or u.user_type == 'school_admin')
 def create_student_profile(request, user_id):
@@ -114,7 +114,8 @@ def create_student_profile(request, user_id):
     
     school_admin_profile = get_object_or_404(SchoolAdminProfile, school_admin=request.user)
     the_school = school_admin_profile.school
-    school = SchoolProfile.objects.get(school=the_school)
+    school = get_object_or_404(SchoolProfile, school=the_school)
+
     try:
         student_profile = StudentProfile.objects.get(student=student)
         form = StudentProfileForm(instance=student_profile)
@@ -130,26 +131,30 @@ def create_student_profile(request, user_id):
                     student_profile = form.save(commit=False)
                     student_profile.student = student
                     student_profile.school = school
+                    student_profile.updated_by = request.user  # Track last modified admin
 
-                    grade_level_id = form.cleaned_data['grade_level'].id
+                    # If profile is being created for the first time, set `created_by`
+                    if not student_profile.created_by:
+                        student_profile.created_by = request.user
 
+                    # Assign academic year
                     current_academic_calendar = AcademicCalendar.objects.get(is_current=True)
                     student_profile.academic_year = current_academic_calendar
                     
                     student_profile.save()
 
-                    # Assign all subjects from the school to the student
-                    subjects = SchoolSubject.objects.filter(school=school)
-                    student_profile.subjects.set(subjects)  
-                    student_profile.save()
+                    # ✅ Ensure student has an assigned class before redirecting
+                    if not student_profile.assigned_class:
+                        return redirect('select_classroom', pk=student_profile.pk, grade_level_id=student_profile.grade_level.id)
 
-                    return redirect('select_classroom', pk=student_profile.pk, grade_level_id=grade_level_id)
+
+                    return redirect('student_detail', pk=student_profile.pk)
             except Exception as e:
                 form.add_error(None, str(e))
         else:
-            print(form.errors)  # Add this line to print form errors to the console
+            logger.error(form.errors)  # Log form errors
 
-    return render(request, 'student/create_student_profile.html', {'form': form, 'student': student})
+    return render(request, 'student/create_student_profile.html', {'form': form, 'student': student}) 
 
 #-------------------------------select_classroom------------------------------------------------------
 
@@ -157,8 +162,6 @@ def create_student_profile(request, user_id):
 @user_passes_test(lambda u: u.is_superuser or u.user_type == 'school_admin')
 def select_classroom(request, pk, grade_level_id):  # Add grade_level_id parameter
     student = get_object_or_404(StudentProfile, pk=pk)
-    
-    
     
     school = get_assigned_school(request.user)
     try:
@@ -270,36 +273,36 @@ def student_details(request, pk):
 from django.db.models import F
 
 
-@login_required
-def student_profile(request, pk):
-    # Retrieve the student profile
-    student_profile = get_object_or_404(StudentProfile, pk=pk)
-    student_school=student_profile.school
-    current_school =student_profile.school
-    _class  =student_profile.assigned_class
+# @login_required
+# def student_profile(request, pk):
+#     # Retrieve the student profile
+#     student_profile = get_object_or_404(StudentProfile, pk=pk)
+#     student_school=student_profile.school
+#     current_school =student_profile.school
+#     _class  =student_profile.assigned_class
    
     
-    # Check if the logged-in user is the school admin for the student's school
-    user_is_student_school_admin = False
+#     # Check if the logged-in user is the school admin for the student's school
+#     user_is_student_school_admin = False
     
-    if student_school:
-        the_school = get_user_school(request.user) 
-        the_school = the_school
-    else:
+#     if student_school:
+#         the_school = get_user_school(request.user) 
+#         the_school = the_school
+#     else:
           
-        student_school = the_school
+#         student_school = the_school
 
-    # Retrieve the next and previous students
-    next_student = StudentProfile.objects.filter(pk__gt=pk,school=current_school,assigned_class=_class).first()
-    previous_student = StudentProfile.objects.filter(pk__lt=pk,school=current_school,assigned_class=_class).order_by('-pk').first()
+#     # Retrieve the next and previous students
+#     next_student = StudentProfile.objects.filter(pk__gt=pk,school=current_school,assigned_class=_class).first()
+#     previous_student = StudentProfile.objects.filter(pk__lt=pk,school=current_school,assigned_class=_class).order_by('-pk').first()
 
-    return render(request, 'student/student_profile.html', {
-        'student_profile': student_profile,
-        'next_student': next_student,
-        'previous_student': previous_student,
-        'user_is_student_school_admin': user_is_student_school_admin,
-        'student_school':student_school
-    })
+#     return render(request, 'student/student_profile.html', {
+#         'student_profile': student_profile,
+#         'next_student': next_student,
+#         'previous_student': previous_student,
+#         'user_is_student_school_admin': user_is_student_school_admin,
+#         'student_school':student_school
+#     })
 
 
 #------------------------------------classrooms--------------------------------------------
@@ -350,6 +353,7 @@ def create_classroom(request):
             classroom = form.save(commit=False)
             classroom.school = school
             classroom.year = year
+            classroom.created_by = request.user
             classroom.save()
             return redirect('create_classroom')
         else:
@@ -443,7 +447,9 @@ def edit_classroom(request, pk):
     if request.method == 'POST':
         form = EditClassRoomForm(request.POST, instance=classroom)
         if form.is_valid():
-            form.save()
+            classroom = form.save(commit=False)
+            classroom.updated_by = request.user
+            classroom.save()
             return redirect('classroom_details',  pk=pk)
     else:
         form =  EditClassRoomForm(instance=classroom)
@@ -460,9 +466,11 @@ def edit_student_profile(request, pk):
     if request.method == 'POST':
         form = EditStudentProfileForm(request.POST, request.FILES, instance=student_profile)
         if form.is_valid():
+            student = form.save(commit=False)
+            student.updated_by = request.user
             try:
                 with transaction.atomic():
-                    form.save()
+                    student.save()
                     grade_level_id = form.cleaned_data['grade_level'].id
                     # Redirect to a success page or another view
                     return redirect('select_classroom', pk=student_profile.pk,grade_level_id=grade_level_id)
@@ -495,14 +503,21 @@ def attendance(request, classroom_id):
     if request.method == 'POST':
         form = AttendanceForm(request.POST)
         if form.is_valid():
-            # Update attendance record with the form data
-            attendance = Attendance.objects.get(
-                student=form.cleaned_data['student'], 
-                date=today, 
-                classroom=classroom
+            student = form.cleaned_data['student']
+
+            # Get or create attendance record
+            attendance, created = Attendance.objects.get_or_create(
+                student=student,
+                date=today,
+                classroom=classroom,
+                defaults={'status': 'Absent', 'recorded_by': request.user}  # Record initial creator
             )
-            attendance.status = 'Absent'
-            attendance.save()
+
+            if not created:  # If the record exists, update status and editor
+                attendance.status = 'Absent'
+                attendance.updated_by = request.user
+                attendance.save()
+
             return redirect('attendance', classroom_id=classroom_id)
     else:
         form = AttendanceForm(initial={'date': today})
@@ -512,7 +527,8 @@ def attendance(request, classroom_id):
         'classroom': classroom,
         'today': today,
         'attendance_records': attendance_records,
-    })    
+    })
+   
 #-------------------------------------------------attendance_record--------------------------------------------------------------    
 
 @login_required
@@ -602,16 +618,43 @@ def students_list(request):
 
 #----------------------------------create_activity---------------------------------------
 
+@login_required
+@user_passes_test(lambda u: u.is_superuser or u.user_type == 'school_admin')
 def create_activity(request):
     if request.method == 'POST':
         form = ExtraCurricularActivityForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('activity_list')  # Redirect to a list view or any other view
+            activity = form.save(commit=False)
+            activity.created_by = request.user  # Store who created it
+            activity.save()
+            form.save_m2m()
+            return redirect('activity_list')
+
     else:
         form = ExtraCurricularActivityForm()
-    
+
     return render(request, 'student/create_activity.html', {'form': form})
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser or u.user_type == 'school_admin')
+def update_activity(request, activity_id):
+    activity = get_object_or_404(ExtraCurricularActivity, id=activity_id)
+
+    if request.method == 'POST':
+        form = ExtraCurricularActivityForm(request.POST, instance=activity)
+        if form.is_valid():
+            activity = form.save(commit=False)
+            activity.updated_by = request.user  # Store who last updated it
+            activity.save()
+            form.save_m2m()
+            return redirect('activity_list')
+
+    else:
+        form = ExtraCurricularActivityForm(instance=activity)
+
+    return render(request, 'student/update_activity.html', {'form': form})
+
 
 
 #--------------------------------------------activity_list---------------------------------------------------------------
@@ -673,19 +716,21 @@ def transfer_student(request, pk):
     school = SchoolProfile.objects.get(school=the_school)
     student_profile = get_object_or_404(StudentProfile, id=pk)
 
-    # Record the current school in the history if it exists
+    # Record the current school in history before suspending the student
     if student_profile.school:
         StudentSchoolHistory.objects.create(
             student=student_profile,
-            school=student_profile.school
+            school=student_profile.school,
+            transferred_by=request.user  # Track who transferred the student
         )
 
     # Set the student's school to null (suspended)
     student_profile.school = None
     student_profile.save()
 
-    messages.success(request, f'{student_profile.student} has been placed in suspense for transfer.')
+    messages.success(request, f'{student_profile.student.get_full_name()} has been placed in suspense for transfer.')
     return redirect('student_details', pk)
+
 
 #-------------------------------
 
@@ -698,26 +743,26 @@ def undo_transfer(request, pk):
     
     student_profile = get_object_or_404(StudentProfile, id=pk)
 
-    # Check if the student has any school history
+    # Get the latest transfer history
     latest_history = StudentSchoolHistory.objects.filter(student=student_profile).order_by('-transfer_date').first()
 
     if latest_history:
-        # Restore the most recent school
+        # Restore the last school
         student_profile.school = latest_history.school
         student_profile.save()
 
-        # Optionally, delete the latest history entry if no longer needed
-        latest_history.delete()
+        # Track who undid the transfer
+        latest_history.undo_by = request.user
+        latest_history.save()
 
         messages.success(
             request,
-            f"{student_profile.student.get_full_name} has been restored to {student_profile.school.school.school}."
+            f"{student_profile.student.get_full_name} has been restored to {student_profile.school.school}."
         )
     else:
         messages.error(request, f"No school history found for {student_profile.student.get_full_name}. Undo failed.")
 
-    return redirect('student_details', pk)
-
+    return redirect('student_details', pk=pk)
 
 #------------------------------suspense_pool----------------------------------------------
 

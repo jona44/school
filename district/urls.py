@@ -1,7 +1,6 @@
 from django.urls import path
 from . import views
 from . import calendar_views
-from .views import logout_view
 from django.contrib.auth import views as auth_views
 urlpatterns = [
 
@@ -28,6 +27,7 @@ urlpatterns = [
   
     path('register_school_head/', views.register_school_head,name='register_school_head'),
     path('register_school_admin/', views.register_school_admin,name='register_school_admin'),
+    path('register_district_admin/', views.register_district_admin,name='register_district_admin'),
     
     path('create_districtAdmin_profile/<int:user_id>/', views.create_districtAdmin_profile,name='create_districtAdmin_profile'),
     path('create_schoolHead_profile/<int:user_id>/', views.create_schoolHead_profile, name='create_schoolHead_profile'),
@@ -40,14 +40,14 @@ urlpatterns = [
     path('create_holidays/', calendar_views.create_holidays, name='create_holidays'),
     path('holiday_list/', calendar_views.holiday_list, name='holiday_list'),
     path('holidays/<int:pk>/edit/', calendar_views.holiday_update, name='holiday_update'),
-    path('holidays/<int:pk>/delete/', calendar_views.holiday_delete, name='holiday_delete'),
-    path('academic-calendars/', calendar_views.academic_calendar_list, name='academic_calendar_list'),
+    path('academic-calendars/', calendar_views.academic_calendar_detail, name='academic_calendar_detail'),
     path('academic-calendars/<int:pk>/edit/', calendar_views.academic_calendar_update, name='academic_calendar_update'),
-    path('academic-calendars/<int:pk>/delete/', calendar_views.academic_calendar_delete, name='academic_calendar_delete'),
-    # path('academic_calendar/<int:academic_calendar_id>/', views.academic_calendar_details, name='academic_calendar_details'),
     
     path('grade_level/', views.grade_level, name='grade_level'),
     
     path('teachers/', views.teacher_list_view, name='all_teachers'),
+    path('create-group/', views.create_group, name='create_group'),
+    
+    
 
 ]

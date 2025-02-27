@@ -401,17 +401,18 @@ def delete_assignment(request, assignment_id):
     return render(request, 'grading/delete_assignment.html', context)   
 
 
+
 @login_required
 def assignments_list(request, subject_id):
+    
     subject = get_object_or_404(SchoolSubject, id=subject_id)
-    # teacher = get_object_or_404(TeacherProfile, id=teacher_id)
-    assignments = Assignment.objects.filter( subject=subject)
+    assignments = Assignment.objects.filter(subject=subject)  # Fetch only assignments for this subject
     
     context = {
         'assignments': assignments,
         'subject': subject,
-        # 'teacher': teacher,
-        
     }
     return render(request, 'grading/assignments_list.html', context)
+
+
  

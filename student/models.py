@@ -8,11 +8,11 @@ from django.db.models import Count
 from schoolconfig.models import *
 
 
+
 class StudentProfile(models.Model):
-    school          = models.ForeignKey(SchoolProfile, on_delete=models.SET_NULL, blank=True, null=True)  # Make it nullable
+    school          = models.ForeignKey(SchoolProfile, on_delete=models.SET_NULL, blank=True, null=True)
     student         = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
     gender          = models.CharField(max_length=10, choices=[('male', 'Male'), ('female', 'Female')])
-    subjects        = models.ManyToManyField(SchoolSubject)  # Correctly relates to Subject
     grade_level     = models.ForeignKey(GradeLevel, on_delete=models.CASCADE, default=8)
     date_of_birth   = models.DateField()
     assigned_class  = models.ForeignKey('ClassRoom', on_delete=models.SET_NULL, null=True, blank=True)
@@ -27,6 +27,23 @@ class StudentProfile(models.Model):
     student_photo   = models.ImageField(upload_to="students_photos", blank=True, null=True)
     is_suspended    = models.BooleanField(default=False)
     matriculated    = models.BooleanField(default=False)
+    
+    # Tracking fields
+    created_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_student_profiles')
+    updated_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='updated_student_profiles')
+
+    # def __str__(self):
+    #     return f"{self.student.first_name} {self.student.last_name} - {self.school}"
+
+
+    def get_subjects(self):
+        """Fetch subjects from the assigned class profile."""
+        if self.assigned_class and self.assigned_class.profile:
+            return self.assigned_class.profile.subjects.all()
+        return []
+
+    def __str__(self):
+        return f"{self.student} - {self.assigned_class.name if self.assigned_class else 'No Class'}"
 
     # Define default image paths
     DEFAULT_MALE_PHOTO    = 'students_photos/default_male.png'
@@ -61,13 +78,17 @@ class ClassRoom(models.Model):
     name        = models.ForeignKey(ClassName, on_delete=models.CASCADE)
     grd_level   = models.ForeignKey(GradeLevel, on_delete=models.CASCADE, null=True, blank=True)
     students    = models.ManyToManyField(StudentProfile, blank=True) 
+    profile     = models.ForeignKey(ClassProfile, on_delete=models.SET_NULL, null=True, blank=True)
     class_teacher = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_class')
     max_capacity  = models.PositiveIntegerField(default=45)
     date          = models.DateField(auto_now_add=True)
     year          = models.ForeignKey(AcademicCalendar, on_delete=models.CASCADE, null=True, blank=True)
     
+    created_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='classroom_profiles')
+    updated_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='uprofile_classrooms')
+    
     def __str__(self):
-        return f"{self.name}"  
+        return f"{self.name} ({self.profile})" 
     
     class Meta:
         ordering = ['name']
@@ -80,24 +101,36 @@ class ClassRoom(models.Model):
     
     def get_absolute_url(self):
         return reverse('classroom-detail', kwargs={'pk': self.pk})
+    
+    def save(self, *args, **kwargs):
+        if not self.profile:
+            # Assign the default profile if none is provided
+            self.profile = ClassProfile.objects.filter(is_default=True).first()
+        super().save(*args, **kwargs)
 
 
 class Attendance(models.Model):
-    classroom    = models.ForeignKey(ClassRoom, on_delete=models.CASCADE, null=True, blank=True)
-    student = models.ForeignKey(StudentProfile, on_delete=models.CASCADE)
-    date    = models.DateField(default=datetime.datetime.now)
-    status  = models.CharField(max_length=10,default='',choices=[('Present', 'Present'), ('Absent', 'Absent')])    
+    classroom       = models.ForeignKey(ClassRoom, on_delete=models.CASCADE, null=True, blank=True)
+    student         = models.ForeignKey(StudentProfile, on_delete=models.CASCADE)
+    date            = models.DateField(default=datetime.datetime.now)
+    status          = models.CharField(max_length=10, default='', choices=[('Present', 'Present'), ('Absent', 'Absent')])    
     academic_year   = models.ForeignKey(AcademicCalendar, on_delete=models.CASCADE, null=True, blank=True)
+
+    # Tracking fields
+    recorded_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='recorded_attendance')
 
     def has_attendance(self, day):
         return Attendance.objects.filter(student=self.student, date=day).exists()
 
-    
     def is_present(self):
         return self.status == 'Present'
 
     def is_absent(self):
         return self.status == 'Absent'
+
+    def __str__(self):
+        return f"{self.student.student.first_name} - {self.date} - {self.status}"
+
     
 class ExtraCurricularActivity(models.Model):
     CATEGORY_CHOICES = [
@@ -106,15 +139,21 @@ class ExtraCurricularActivity(models.Model):
         ('AC', 'Academic'),
         ('OT', 'Other'),
     ]
+
     activity_name  = models.CharField(max_length=50)    
     description    = models.TextField(blank=True, null=True)
-    instructor     = models.OneToOneField(CustomUser, on_delete=models.CASCADE,blank=True, null=True)
+    instructor     = models.OneToOneField(CustomUser, on_delete=models.CASCADE, blank=True, null=True)
     requirements   = models.TextField(blank=True, null=True)
     category       = models.CharField(max_length=2, choices=CATEGORY_CHOICES)
     participants   = models.ManyToManyField(StudentProfile)
-    
+
+    # Tracking fields
+    created_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_activities')
+    updated_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='updated_activities')
+
     def __str__(self):
-        return self.activity_name      
+        return self.activity_name
+    
 
 
 class AcademicRecord(models.Model):
@@ -135,7 +174,8 @@ class StudentSchoolHistory(models.Model):
     student       = models.ForeignKey(StudentProfile, on_delete=models.CASCADE, related_name='school_history')
     school        = models.ForeignKey(SchoolProfile, on_delete=models.CASCADE)
     transfer_date = models.DateField(auto_now_add=True)
+    transferred_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='transferred_students')
+    undo_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='undo_transfers')
 
     def __str__(self):
         return f"{self.student.student.get_full_name} - {self.school.school}"
-

@@ -26,7 +26,7 @@
                 </div>
             </div>
             <p><strong>Subjects:</strong> 
-                {% for subject in student_profile.subjects.all %}
+                {% for subject in student.get_subjects %}
                   <span class="badge bg-light"><a href="{% url 'student_grades' student_profile.id subject.id %}">{{ subject.id }}-{{ subject }}</a> </span>
                 {% endfor %}
             </p>
