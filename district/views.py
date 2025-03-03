@@ -77,7 +77,7 @@ logger = logging.getLogger(__name__)
 
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser or u.user_type == 'District_admin')
+@user_passes_test(lambda u: u.is_superuser or u.user_type == 'district_admin')
 def create_districtAdmin_profile(request, user_id):
     
     # View to create a DistrictAdminProfile for a newly registered user.
@@ -114,7 +114,7 @@ def create_districtAdmin_profile(request, user_id):
 #--------------------------------create_schoolHead_profile-----------------------------------
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser or u.user_type == 'District_admin')
+@user_passes_test(lambda u: u.is_superuser or u.user_type == 'district_admin')
 def create_schoolHead_profile(request, user_id):
     # View for creating or updating a SchoolHead profile associated with a user.
     user = CustomUser.objects.get(pk=user_id)  # Get the user from the passed user_id
@@ -257,8 +257,27 @@ def create_subject(request):
     if request.method == 'POST':
         form = SubjectForm(request.POST)
         if form.is_valid():
-            form.save()
+            subject_name = form.cleaned_data['subjects'].strip().title()  # Clean and format input
+            if not subject_name:
+                 messages.error(request, "Subject name cannot be blank.")
+                 return render(request, 'district/subject_form.html', {'form': form, 'all_subjects': all_subjects})
+
+            # Check for duplicates (case-insensitive)
+            if Subjects.objects.filter(subjects__iexact=subject_name).exists():
+                messages.error(request, f"Subject '{subject_name}' already exists.")
+                return render(request, 'district/subject_form.html', {'form': form, 'all_subjects': all_subjects})
+            
+            # If no duplicates, save the new subject
+            subject = form.save(commit=False)
+            subject.subjects = subject_name
+            subject.save()
+            messages.success(request, f"Subject '{subject_name}' created successfully.")
+
             return redirect('subject')
+        else:
+            messages.error(request, "Invalid form submission. Please check the form.")
+            return render(request, 'district/subject_form.html', {'form': form, 'all_subjects': all_subjects})
+
     else:
         form = SubjectForm()
 
@@ -418,7 +437,7 @@ def register_school_head(request):
 
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser or u.user_type == 'District_admin')
+@user_passes_test(lambda u: u.is_superuser or u.user_type == 'district_admin')
 def assign_schoolHead(request, user_id):
     """
     View to create a SchoolAdmin for a given CustomUser.

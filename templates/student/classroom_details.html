@@ -11,7 +11,8 @@
                 {% if request.user == classroom.class_teacher %}
                     <a href="{% url 'attendance' classroom.id %}" class="btn btn-dark  ">Attendance Register</a>&nbsp;
                 {% endif %}
-                <a href="{% url 'edit_classroom' classroom.pk %}" class="btn btn-warning">Update Classroom</a>
+                <a href="{% url 'edit_classroom' classroom.pk %}" class="btn btn-warning">Update Classroom</a>&nbsp;
+                <a href="{% url 'submitted_assignments' classroom.id %}" class="btn btn-success">Submitted Assignments</a>
             </div>
 
             <hr class="text-success">

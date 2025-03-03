@@ -1,0 +1,39 @@
+<!-- File: c:\Users\tjman\OneDrive\school\templates\assignment\assignment_view.html -->
+
+{% extends "partials/base.html" %}
+
+{% block content %}
+<div class="container mt-4 offset-md-1">
+    <div class="card">
+        <div class="card-header bg-info text-white">
+            <h2 class="card-title">Assignment Details</h2>
+        </div>
+        <div class="card-body">
+            <h4 class="card-subtitle mb-2 text-muted">Title: {{ assignment.title }}</h4>
+            <p class="card-text"><strong>Description:</strong> {{ assignment.description }}</p>
+            <p class="card-text"><strong>Subject:</strong> {{ assignment.subject }}</p>
+            <p class="card-text"><strong>Due Date:</strong> {{ assignment.due_date }}</p>
+            <p class="card-text"><strong>Created At:</strong> {{ assignment.created_at }}</p>
+
+            {% if submission %}
+                <div class="mt-4">
+                    <h5 class="card-title">Your Submission</h5>
+                    <p class="card-text"><strong>Submitted At:</strong> {{ submission.submitted_at }}</p>
+                    <p class="card-text"><strong>File:</strong> 
+                        <a href="{{ submission.file.url }}" target="_blank" class="btn btn-primary btn-sm">View File</a>
+                    </p>
+                </div>
+            {% else %}
+                <div class="mt-4">
+                    <p class="card-text text-warning">You have not submitted this assignment yet.</p>
+                   
+                    <a href="{% url 'assignment_submission' assignment.id %}" class="btn btn-success">Submit Assignment</a>
+                </div>
+            {% endif %}
+            <div class="mt-4">
+                 <a href="{% url 'assignments_list' assignment.subject.id %}" class="btn btn-secondary">Back to Assignments</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

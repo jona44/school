@@ -1,60 +1,98 @@
-# File: c:\Users\tjman\OneDrive\school\templates\customadmin\dashboard\student_dashboard.html
-
 {% extends "partials/base.html" %}
 
-
 {% block content %}
-<div class="container offset-md-1 mt-4">  {# Bootstrap container with top margin #}
-    <h1 class="mb-4">Welcome to Your Student Dashboard</h1>  {# Margin bottom for spacing #}
+<div class="container offset-md-1 mt-4">
+    <h1 class="mb-4">Welcome to Your Student Dashboard</h1>
 
-    <div class="card mb-4">  {# Bootstrap card for class info section with margin bottom #}
-        <div class="card-header bg-primary text-white">  {# Card header with primary background and white text #}
-            <h2 class="card-title">Class Information</h2>  {# Card title inside header #}
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h2 class="card-title">Class Information</h2>
         </div>
-        <div class="card-body d-flex">  {# Card body for content #}
-            {% if assigned_class %}
-                <p class="card-text"><strong>Your Class:</strong> {{ assigned_class }}</p>  {# Card text style for paragraph #}
-            {% else %}
-                <p class="card-text text-muted">You are not currently assigned to a class.</p> {# Muted text for less important info #}
-            {% endif %}
-            <a href="">My Profile</a>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    {% if assigned_class %}
+                    <p class="card-text"><strong>Your Class:</strong> {{ assigned_class }}</p>
+                    {% else %}
+                    <p class="card-text text-muted">You are not currently assigned to a class.</p>
+                    {% endif %}
+                   <a href="">My Profile</a>
+                </div>
+                <div class="col-md-6">
+                    {% if classmates_count > 0 %}
+                    <p class="card-text mb-1"><strong>Total Classmates:</strong> <span class="badge bg-secondary">{{ classmates_count }}</span></p>
+                    <p class="card-text mb-1"><strong>Female Classmates:</strong> <span class="badge bg-pink text-white">{{ female_classmates }}</span></p>
+                    <p class="card-text mb-1"><strong>Male Classmates:</strong> <span class="badge bg-primary">{{ male_classmates }}</span></p>
+                    {% else %}
+                    <p class="card-text text-muted">No classmates information available.</p>
+                    {% endif %}
+                </div>
+            </div>
         </div>
+    </div>
+    <div class="mt-4">
+        <h2 class="mb-3">Subjects and Assignments</h2>
+        {% if assigned_class and assigned_class.profile %}
+        <div class="row">
+            {% for subject in assigned_class.profile.subjects.all %}
+            <div class="col-md-4 mb-4">
+                <div class="card subject-card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="card-title mb-0">{{ subject }}</h5>
+                    </div>
+                    <div class="card-body p-2">
+                       <ul class="list-unstyled">
+                       {% if subject.assignment_set.all %}
+                            {% for assignment in subject.assignment_set.all %}
+                            <li class="mb-1">
+                                <div class="d-flex align-items-center">
+                                    <a href="{% url 'assignments_list' subject.id %}" class="text-decoration-none flex-grow-1">
+                                       {{ assignment.title }} 
+                                    </a>
+                                    {% if user in assignment.submitted_by.all %}
+                                    <span class="badge bg-success ms-2">Submitted</span>
+                                    {% elif assignment.due_date < today %}
+                                        <span class="badge bg-danger ms-2">Overdue</span>
+                                    {% else %}
+                                        <span class="badge bg-warning ms-2">Pending</span>
+                                    {% endif %}
+                                </div>
+                            </li>
+                            {% endfor %}
+                            {% else %}
+                               <li class="text-muted">No assignment for this subject</li>
+                            {% endif %}
+                       </ul>
+                    </div>
+                    <div class="card-footer">
+                      <a href="{% url 'assignments_list' subject.id %}" class="text-decoration-none">View All</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted">No subjects assigned</p>
+        {% endif %}
     </div>
 
-    <div class="card">  {# Bootstrap card for classmates info section #}
-        <div class="card-header bg-info text-white">  {# Card header with info background and white text #}
-            <h2 class="card-title">Classmates Information</h2>  {# Card title inside header #}
-        </div>
-        <div class="card-body">  {# Card body for content #}
-            {% if classmates_count > 0 %}
-                <p class="card-text"><strong>Total Classmates:</strong> <span class="badge bg-secondary">{{ classmates_count }}</span></p> {# Badge to highlight count #}
-                <p class="card-text"><strong>Female Classmates:</strong> <span class="badge bg-pink text-white">{{ female_classmates }}</span></p> {# Badge with pink background #}
-                <p class="card-text"><strong>Male Classmates:</strong> <span class="badge bg-primary">{{ male_classmates }}</span></p> {# Badge with primary background #}
-            {% else %}
-                <p class="card-text text-muted">No classmates information available.</p> {# Muted text for no info #}
-            {% endif %}
-        </div>
-    </div>
-  <div class="card mt-4">
-    <div class="card-header bg-success text-white">
-        <h2 class="card-title">Subjects</h2>
-    </div>
-    <div class="card-body">
-        <ul class="list-unstyled">
-            {% if assigned_class and assigned_class.profile %}
-                {% for subject in assigned_class.profile.subjects.all %}
-                    <li>
-                        <a href="{% url 'assignments_list' subject.id  %}" class="text-decoration-none d-block py-1">
-                           {{ subject }}
-                        </a>
-                    </li>
-                {% endfor %}
-            {% else %}
-                <li class="text-muted">No subjects assigned</li>
-            {% endif %}
-        </ul>
-    </div>
 </div>
 
-</div>
+<style>
+    .subject-card {
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .subject-card .card-header {
+      padding: 0.5rem;
+    }
+    .subject-card .card-body{
+        padding: 0.5rem;
+    }
+
+    .subject-card .card-footer{
+       padding: 0.5rem;
+    }
+</style>
 {% endblock %}

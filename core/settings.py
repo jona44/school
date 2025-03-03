@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'grading',
     'district',
     'schoolconfig',
+    'assignment',
     'debug_toolbar',
     'django_extensions',
     

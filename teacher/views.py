@@ -143,24 +143,4 @@ def update_teacher_profile(request,pk):
 
 
 #---------------------------------teacher_list--------------------------------------
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
-from .models import Assignment, Subject
 
-
-# @login_required
-# def create_assignment(request):
-#     if request.user.user_type != 'teacher':
-#         return redirect('dashboard')  # Prevent non-teachers from accessing
-
-#     if request.method == 'POST':
-#         form = AssignmentForm(request.POST)
-#         if form.is_valid():
-#             assignment = form.save(commit=False)
-#             assignment.teacher = request.user  # Assign teacher automatically
-#             assignment.save()
-#             return redirect('teacher_dashboard')
-#     else:
-#         form = AssignmentForm()
-
-#     return render(request, 'assignments/create_assignment.html', {'form': form})

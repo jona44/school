@@ -1,0 +1,48 @@
+```django-html
+<!-- File: c:\Users\tjman\OneDrive\school\templates\assignment\submitted_assignments_by_classroom.html -->
+
+{% extends 'partials/base.html' %}
+
+{% block content %}
+<div class="container mt-4 offset-md-1">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h1 class="card-title">Submitted Assignments for {{ classroom.name }}</h1>
+        </div>
+        <div class="card-body">
+            {% if submissions %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Assignment</th>
+                                <th>Student</th>
+                                <th>Submitted At</th>
+                                <th>File</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for submission in submissions %}
+                                <tr>
+                                    <td>{{ submission.assignment.title }}</td>
+                                    <td>{{ submission.student.user.get_full_name }}</td>
+                                    <td>{{ submission.submitted_at }}</td>
+                                    <td>
+                                        <a href="{{ submission.file.url }}" target="_blank" class="btn btn-primary btn-sm">View File</a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted">No submissions found for this classroom yet.</p>
+            {% endif %}
+           <a href="{% url 'teacher_dashboard' %}" class="btn btn-secondary mt-2">Back to dashboard</a>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+```
+

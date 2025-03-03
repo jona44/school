@@ -31,6 +31,7 @@ urlpatterns = [
     path('', include('district.urls')),
     path('', include('schoolconfig.urls')),
     path('', include('customadmin.urls')),
+    path('', include('assignment.urls')),
     path('__debug__/', include('debug_toolbar.urls')),
     
 ]

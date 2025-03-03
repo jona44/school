@@ -6,7 +6,6 @@ from customadmin.models import CustomUser
 from schoolconfig.models import ClassName, SchoolProfile, SchoolSubject,SchoolAdminProfile
 from student.models import ClassRoom
 from .models import TeacherProfile
-from .models import Assignment
 
 
 class TeacherRegistrationForm(UserCreationForm):
