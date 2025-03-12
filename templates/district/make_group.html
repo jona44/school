@@ -1,8 +1,8 @@
-{% extends 'partials/base.html' %}
+{% extends 'partials/account_base.html' %}
 {% load crispy_forms_tags %}
 
 {% block content %}
-<div class="container mt-5 offset-md-1">
+
     <h1>Create a Group</h1>
     <form method="post">
         {% csrf_token %}
@@ -38,4 +38,5 @@
         {% endif %}
     </div>
 </div>
+<a href="{% url 'superuser_landing' %}" class="btn btn-primary">back</a>
 {% endblock %}

@@ -7,13 +7,14 @@ urlpatterns = [
     path('', views.dashboard,name='dashboard'),
 
     path('dashboard/student/', views.dashboard, name='student_dashboard'),
-    path('dashboard/staff/', views.dashboard, name='teacher_dashboard'),
+    path('dashboard/teacher/', views.dashboard, name='teacher_dashboard'),
     path('dashboard/school_admin/', views.dashboard, name='school_admin_dashboard'),
     path('dashboard/deputy_head/', views.dashboard, name='deputy_head_dashboard'),
     path('dashboard/school_head/', views.dashboard, name='school_head_dashboard'),
     path('dashboard/district_admin/', views.dashboard, name='district_admin_dashboard'),
     path('default_dashboard/', views.dashboard, name='default_dashboard'),
     path('error_page/', views.error_page, name='error_page'),
+    path('superuser_landing/', views.superuser_landing, name='superuser_landing'),
    
 
 ]

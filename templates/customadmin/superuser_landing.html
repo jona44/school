@@ -1,0 +1,58 @@
+{% extends "partials/account_base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="">
+            
+                <div class="card-header bg-primary text-white text-center">
+                    <h1 class="mb-0">Superuser Landing</h1>
+                </div>
+                <div class="card-body">
+                    <p class="lead text-center">
+                        Welcome, Superuser! This is your dedicated control panel.
+                    </p>
+
+                    <hr>
+
+                    <h4 class="mb-3">Superuser Actions</h4>
+
+                    <div class="list-group">
+                        <a href="#" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">Manage Users</h5>
+                                <small class="text-muted">Administer all users</small>
+                            </div>
+                            <p class="mb-1">View, edit, and manage all users within the system.</p>
+                           
+                        </a>
+                         <a href="{% url 'create_group' %}" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">Manage Groups</h5>
+                                <small class="text-muted">Create & edit user groups</small>
+                            </div>
+                            <p class="mb-1">create or edit user groups.</p>
+                           
+                        </a>
+                        <a href="{% url 'admin:index' %}" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">Django Admin</h5>
+                                <small class="text-muted">Full System Access</small>
+                            </div>
+                            <p class="mb-1">Access the full Django Admin interface for advanced management.</p>
+                            
+                        </a>
+                         <a href="{% url 'register_district_admin' %}" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">Create District Admin</h5>
+                                <small class="text-muted">Add a new District Admin</small>
+                            </div>
+                            <p class="mb-1">Create a new user with District Admin privileges.</p>
+                           
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,10 +1,10 @@
 <!-- filepath: /C:/Users/tjman/OneDrive/school/templates/district/register_school_head.html -->
-{% extends "partials/base.html" %}
+{% extends "partials/account_base.html" %}
 {% load crispy_forms_tags %}
 
 {% block content %}
-<div class="row mt-5" style="height: 50vh;">
-    <div class="col-8 offset-md-1 p-3  shadow-lg">
+<div class="row " style="height: 50vh;">
+  
         <h1 class="text-primary">Register District Admin</h1>
         <form method="POST" enctype="multipart/form-data">
             {% csrf_token %}
@@ -48,9 +48,11 @@
                 </div>
             </div>
             <hr class="text-primary">
-            <button type="submit" class="btn btn-dark">Create School Admin</button> 
+            <button type="submit" class="btn btn-dark">Create School Admin</button><br> 
+            <a href="{% url 'superuser_landing' %}" class="btn btn-primary">back</a>
 
        </form>
     </div>
 </div>
+
 {% endblock %}
