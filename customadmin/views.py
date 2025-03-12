@@ -221,3 +221,6 @@ def  registration_complete(request):
 
 def error_page(request):
     return render(request,'customadmin/error_page.html')
+
+def superuser_landing(request):
+    return render(request,'customadmin/superuser_landing.html')
