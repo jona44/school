@@ -3,7 +3,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django import forms
 from django.shortcuts import get_object_or_404
 from customadmin.models import CustomUser
-from schoolconfig.models import Subjects ,SchoolAdminProfile
+from schoolconfig.models import SchoolAdminProfile
 from .models import *
 from django.http import HttpResponseRedirect
 from teacher.models import Assignment, AssignmentSubmission
@@ -122,29 +122,6 @@ class EditStudentProfileForm(forms.ModelForm):
             }),
         }
 
-
-# class CreateClassRoomForm(forms.ModelForm):
-#     class Meta:
-#         model  = ClassRoom  
-#         fields = [ 'grd_level','name', 'class_teacher','profile']
-        
-
-#     def __init__(self, *args, **kwargs):
-#         school = kwargs.pop('school', None)
-#         year = kwargs.pop('year', None)  # Add year to filter teachers based on the academic year
-#         super(CreateClassRoomForm, self).__init__(*args, **kwargs)
-        
-#         if school and year:
-#             # Exclude classrooms that already exist for the given school and year
-#             existing_classrooms = ClassRoom.objects.filter(school=school, year=year).values_list('name', flat=True)
-#             self.fields['name'].queryset = ClassName.objects.filter(schoolprofile=school).exclude(id__in=existing_classrooms)
-            
-#             # Exclude teachers already assigned to a classroom in the same school and year
-#             assigned_teachers = ClassRoom.objects.filter(school=school, year=year).exclude(class_teacher__isnull=True).values_list('class_teacher', flat=True)
-#             self.fields['class_teacher'].queryset = CustomUser.objects.filter(
-#                 groups__name='teacher', 
-#                 teacherprofile__school=school.id
-#             ).exclude(id__in=assigned_teachers)
 
 
 from django import forms

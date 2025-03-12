@@ -1,4 +1,6 @@
 import datetime
+import random
+import uuid
 from django.db import models
 from customadmin.models import CustomUser
 
@@ -65,14 +67,29 @@ class SchoolHeadProfile(models.Model):
 
         
         
-class Subjects(models.Model):
-    subjects = models.CharField(max_length=50,blank=True,null=True)   
+class SubjectsManager(models.Model):
+    id         = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)  # UUID Field
+    subjects   = models.CharField(max_length=50, blank=True, null=True)
+    color = models.CharField(max_length=7, blank=True, null=True)  # Store the color code
 
     def __str__(self):
-        return f'{self.subjects}'  
+        return f'{self.subjects}'
 
     class Meta:
-        verbose_name_plural = 'Subjects' 
+        verbose_name_plural = 'Subjects'
+
+    def save(self, *args, **kwargs):
+        if not self.color:
+            self.color = self.generate_random_color()
+        super(SubjectsManager, self).save(*args, **kwargs)
+
+    def generate_random_color(self):
+        """Generates a random hex color code."""
+        r = random.randint(0, 255)
+        g = random.randint(0, 255)
+        b = random.randint(0, 255)
+        return f"#{r:02x}{g:02x}{b:02x}"
+
         
         
 class Holiday(models.Model):

@@ -3,7 +3,7 @@ from django.contrib.auth.forms import UserCreationForm
 from customadmin.models import CustomUser
 from schoolconfig.models import SchoolAdminProfile
 from teacher.models import TeacherProfile
-from . models import AcademicCalendar, District,District_School_Registration, DistrictAdminProfile, Holiday, SchoolHeadProfile, Subjects
+from . models import AcademicCalendar, District,District_School_Registration, DistrictAdminProfile, Holiday, SchoolHeadProfile, SubjectsManager
 
 
 
@@ -165,7 +165,7 @@ class SchoolHeadProfileForm(forms.ModelForm):
 
 class SubjectForm(forms.ModelForm):
     class Meta:
-        model  = Subjects
+        model  = SubjectsManager
         fields = ['subjects']
 
 

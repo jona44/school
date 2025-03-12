@@ -1,6 +1,6 @@
 from django.db import models
 from customadmin.models import CustomUser
-from district.models import District_School_Registration,GradeLevel,AcademicCalendar,Subjects
+from district.models import District_School_Registration,GradeLevel,AcademicCalendar,SubjectsManager
 from django.utils.translation import gettext_lazy as _
 
 class SchoolProfile(models.Model):
@@ -45,7 +45,7 @@ class ClassName(models.Model):
     
 
 class SchoolSubject(models.Model):
-    subjects   = models.ManyToManyField(Subjects)
+    subjects   = models.ManyToManyField(SubjectsManager)
     school     = models.ForeignKey(SchoolProfile, on_delete=models.CASCADE,blank=True, null=True) 
 
     def __str__(self):

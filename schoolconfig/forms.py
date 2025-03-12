@@ -15,7 +15,7 @@ class SchoolProfileForm(forms.ModelForm):
     
 
 class SchoolSubjectForm(forms.ModelForm):
-    school_subjects = forms.ModelMultipleChoiceField(queryset=Subjects.objects.all(), widget=forms.CheckboxSelectMultiple)
+    school_subjects = forms.ModelMultipleChoiceField(queryset=SubjectsManager.objects.all(), widget=forms.CheckboxSelectMultiple)
 
     class Meta:
         model = SchoolSubject

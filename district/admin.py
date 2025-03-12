@@ -5,7 +5,7 @@ admin.site.register(District_School_Registration)
 admin.site.register(SchoolHeadProfile)
 admin.site.register(DistrictAdminProfile)
 admin.site.register(District)
-admin.site.register(Subjects)
+admin.site.register(SubjectsManager)
 admin.site.register(Holiday)
 admin.site.register(AcademicCalendar)
 # Register your models here.

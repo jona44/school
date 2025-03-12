@@ -9,7 +9,6 @@ from teacher.models import *
 from student.models import ClassRoom
 from django.db.models import Avg
 from django.urls import reverse
-from district.models import Subjects
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .models import  Capture, SchoolSubject, AcademicCalendar, CapturedClassroom
