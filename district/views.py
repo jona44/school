@@ -253,7 +253,7 @@ def  registration_complete(request):
 @login_required
 @user_passes_test(lambda u: u.is_superuser or u.user_type == 'district_admin')
 def create_subject(request):
-    all_subjects = Subjects.objects.all()
+    all_subjects = SubjectsManager.objects.all()
     if request.method == 'POST':
         form = SubjectForm(request.POST)
         if form.is_valid():

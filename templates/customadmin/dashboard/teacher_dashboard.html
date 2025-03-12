@@ -33,18 +33,23 @@
         {% endif %}
     </div>
     <hr>
-    <div class="col-md  border shado p-3  mt-3 rounded">
+    <div class="row row-cols-1 row-cols-md-2 g-4">
         {% if my_subjects %}
-        <ol>
             {% for subject in my_subjects %}
-            <li><a href="{% url 'capture' subject.id %}">{{ subject }}</a></li>
+            <div class="col">
+                <div class="card h-100">
+                  <div class="card-body">
+                    <h5 class="card-title">{{ subject }}</h5>
+                    <a href="{% url 'capture' subject.id %}" class="btn btn-primary">Go to {{subject}}</a>
+                    <a href="{% url 'create_assignment' subject.id %}" class="btn btn-info"> Online Assignment</a>
+
+                  </div>
+                </div>
+              </div>
             {% endfor %}
-        </ol>
         {% else %}
-        <p>No subjects assigned.</p>
+            <p>No subjects assigned.</p>
         {% endif %}
-      
-        
     </div>
 </div>
 {% endblock %}

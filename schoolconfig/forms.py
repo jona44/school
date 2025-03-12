@@ -5,13 +5,6 @@ class SchoolProfileForm(forms.ModelForm):
     class Meta:
         model = SchoolProfile
         fields = ['school_logo']
-
-    def save(self, commit=True):
-        instance = super(SchoolProfileForm, self).save(commit=False)
-        if commit:
-            instance.save()
-            self.save_m2m()  # Save the many-to-many relationships
-        return instance
     
 
 class SchoolSubjectForm(forms.ModelForm):
