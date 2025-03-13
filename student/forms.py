@@ -6,8 +6,6 @@ from customadmin.models import CustomUser
 from schoolconfig.models import SchoolAdminProfile
 from .models import *
 from django.http import HttpResponseRedirect
-from teacher.models import Assignment, AssignmentSubmission
-
 class StudentRegistrationForm(UserCreationForm):
     class Meta:
         model = CustomUser
@@ -259,8 +257,3 @@ class JoinActivityForm(forms.Form):
 
 
 
-class AssignmentSubmissionForm(forms.ModelForm):
-    class Meta:
-        model = AssignmentSubmission
-        fields = ['file']
-       

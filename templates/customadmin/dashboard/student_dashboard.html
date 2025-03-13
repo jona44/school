@@ -40,7 +40,7 @@
                         </div>
                         <div class="card-body flex-grow-1">
                             {% if subject.assignment_set.all %}
-                            <ul class="list-group list-group-flush">
+                            <ul class="list-group list-group-flush ">
                                 {% for assignment in subject.assignment_set.all %}
                                     <li class="list-group-item">
                                         <a href="{{ assignment.file.url }}" target="_blank">{{ assignment.title }}</a>

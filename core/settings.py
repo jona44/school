@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'schoolconfig',
     'debug_toolbar',
     'django_extensions',
+    'assignment',
     
     
     'django.contrib.sites',  # Required by Allauth

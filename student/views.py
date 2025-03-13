@@ -834,19 +834,3 @@ def accept_student(request, student_profile_id):
 
 
 
-@login_required
-def submit_assignment(request, assignment_id):
-    assignment = get_object_or_404(Assignment, pk=assignment_id)
-    profile = get_object_or_404(StudentProfile, student=request.user)
-    if request.method == 'POST':
-        form = AssignmentSubmissionForm(request.POST, request.FILES)
-        if form.is_valid():
-            submission = form.save(commit=False)
-            submission.student = profile
-            submission.assignment = assignment
-            submission.save()
-            messages.success(request, 'Assignment submitted successfully.')
-            return redirect('student_dashboard')
-    else:
-        form = AssignmentSubmissionForm()
-    return render(request, 'student/submit_assignment.html', {'form': form, 'assignment': assignment})
