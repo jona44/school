@@ -1,0 +1,18 @@
+{% extends 'partials/teacher-base.html' %}
+{% load crispy_forms_tags %}
+
+    <title>Delete Assignment</title>
+{% block content %}
+
+<div class="container mt-5">
+ <h1>Delete Assignment</h1>
+    <p>Are you sure you want to delete the assignment "{{ assignment.title }}"?</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Yes, delete</button>
+        <a href="{% url 'teacher_dashboard' %}">Cancel</a>
+    </form>   
+</div>
+
+    
+{% endblock %}

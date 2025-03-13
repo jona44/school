@@ -1,0 +1,104 @@
+{% extends 'partials/teacher-base.html' %}
+
+{% block content %}
+<div class="container mt-5 border p-3 shadow">
+    <h2 class="bg-secondary text-white p-2"> Assignments for {{subject.id }}:{{subject}}</h2> 
+    <div class="scroll-container bg1 p-2 mb-4" style="height: 200px;">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Subject</th>
+                    <th>Due Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for assignment in assignments %}
+                <tr>
+                    <td>{{ assignment.title }}</td>
+                    <td>{{ assignment.subject.id }} {{ assignment.subject }}</td>
+                    <td>{{ assignment.due_date }}</td>
+                    <td>
+                        <a href="{% url 'delete_assignment' assignment.id %}" class="text-danger">Delete</a>
+                        <a href="{% url 'update_assignment' assignment.id %}" class="text-success">Update</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4">No assignments found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <button id="toggleForm" class="btn btn-info" aria-expanded="false">Create Assignment</button>
+    <div id="captureForm" style="display:none; margin-top: 20px;">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="d-flex">
+                <div class="mb-3 me-3">
+                    <label for="id_title" class="form-label">Title</label>
+                    {{ form.title }}
+                </div>
+                <div class="mb-3">
+                    <label for="id_due_date" class="form-label">Due Date</label>
+                    {{ form.due_date }}
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="id_description" class="form-label">Description</label>
+                {{ form.description }}
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Classes</label>
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="select-all">
+                    <label class="form-check-label" for="select-all">Select All</label>
+                </div>
+                {% for classroom in form.classrooms %}
+                <div class="form-check" style="margin-left: 30px;">
+                    {{ classroom.tag }}
+                    <label class="form-check-label" for="{{ classroom.id_for_label }}">
+                        {{ classroom.choice_label }}
+                    </label>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="mb-3">
+                <label for="id_file" class="form-label">{{form.file.label}}</label>
+                {{ form.file }}
+            </div>
+            <div class="d-grid">
+                <button type="submit" class="btn btn-dark">Submit Created Assignment</button>
+            </div>
+        </form>
+    </div>
+</div>
+<style>
+    .hidden-form {
+        display: none;
+        margin-top: 20px;
+    }
+</style>
+
+<script>
+    document.getElementById("toggleForm").addEventListener("click", function () {
+        var form = document.getElementById("captureForm");
+        if (form.style.display === "none") {
+            form.style.display = "block";
+        } else {
+            form.style.display = "none";
+        }
+    });
+    document.getElementById('select-all').onclick = function() {
+        var checkboxes = document.querySelectorAll('input[type="checkbox"]');
+        for (var checkbox of checkboxes) {
+            checkbox.checked = this.checked;
+        }
+    }
+</script>
+
+{% endblock %}
