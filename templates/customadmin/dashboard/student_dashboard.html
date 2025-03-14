@@ -45,19 +45,19 @@
             {% for subject in assigned_class.profile.subjects.all %}
             <div class="col-md-4 mb-4">
                 <div class="card">
-                    <div class="card-header" style="color : white;background-color:{{ subject.colours|default:'#ffffff' }};">
+                    <div class="card-header" style="color :white; background-color:{{subject.color|default:'#efb67a'}};">
 
-                        <h5 class="card-title ">{{ subject }}</h5>
+                        <h5 class="card-title ">{{subject}}</h5>
                     </div>
                     <div class="card-body p-2">
                         <ul class="list-unstyled">
                             {% comment %}
                             Filter assignments to only show those for this subject AND for the assigned class
                             {% endcomment %}
-                            {% for assignment in assignments_by_class_and_subject|get_item:subject.id %}
+                            {% for assignment in assignments_by_class_and_subject|get_item:subject %}
                             <li class="mb-1">
                                 <div class="d-flex align-items-center">
-                                    <a href="{% url 'assignments_list' subject_canon %}" class="text-decoration-none flex-grow-1">
+                                    <a href="{% url 'assignments_list' subject.id %}" class="text-decoration-none flex-grow-1">
                                         {{ assignment.title }}
                                     </a>
                                     {% if request.user.studentprofile %}

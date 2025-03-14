@@ -5,6 +5,8 @@ from django.views import View
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth.decorators import login_required
+
+from assignment.models import Assignment
 from .models import CustomUser
 from django.contrib.auth.models import Group
 from django.contrib import messages
@@ -35,37 +37,49 @@ def dashboard(request):
 #--------------------------------------Student Dashboard---------------------------------------
 
     if request.user.groups.filter(name='student').exists():
-        try:
-            student_profile = StudentProfile.objects.get(student=request.user)
-            school = student_profile.school
-            assigned_class = student_profile.assigned_class
+            
+            try:
+                student = get_object_or_404(StudentProfile, student=request.user)
+                assigned_class = student.assigned_class if student.assigned_class else None
+                student_profile = student
+                
+                classmates_count = 0
+                female_classmates = 0
+                male_classmates = 0
+                
+                if assigned_class:
+                    classmates = StudentProfile.objects.filter(assigned_class=assigned_class, school = student.school)
+                    classmates_count = classmates.count()
+                    female_classmates = classmates.filter(gender='Female').count()
+                    male_classmates = classmates.filter(gender='Male').count()
+                    
+                    # Get all the assignments for that class and school
+                    assignments = Assignment.objects.filter(classrooms=assigned_class, school=student.school)
 
-            if assigned_class:
-                # Get subjects from the ClassProfile instead of SchoolSubject
-                class_profile = assigned_class.profile
-                subjects = class_profile.subjects.all() if class_profile else []
-
-                # Get classmates within the same school
-                class_students = assigned_class.students.filter(school=school)
-                female_classmates = class_students.filter(gender='female')
-                male_classmates = class_students.filter(gender='male')
-
-                # Populate context
-                context.update({
-                    'classmates_count': class_students.count(),
-                    'female_classmates': female_classmates.count(),
-                    'male_classmates': male_classmates.count(),
+                else:
+                    assignments = [] #or none
+                
+                # Group the assignments by the subject ID.
+                assignments_by_class_and_subject = {}
+                for assignment in assignments:
+                    # we ensure the subject id exist first
+                    if assignment.subject.id not in assignments_by_class_and_subject:
+                        assignments_by_class_and_subject[assignment.subject.id] = []
+                    assignments_by_class_and_subject[assignment.subject.id].append(assignment)
+                print(assignments_by_class_and_subject)
+                context = {
                     'assigned_class': assigned_class,
-                    'subjects': subjects
-                })
-
-                return render(request, 'customadmin/dashboard/student_dashboard.html', context)
-
-        except StudentProfile.DoesNotExist:
-            pass
-
-        return render(request, 'customadmin/dashboard/student_dashboard.html', context)
-
+                    'student_profile': student_profile,
+                    'classmates_count': classmates_count,
+                    'female_classmates': female_classmates,
+                    'male_classmates': male_classmates,
+                    'assignments_by_class_and_subject': assignments_by_class_and_subject,
+                    'assignments' : assignments
+                }
+                return render(request, 'customadmin/dashboard/student_dashboard.html', context) 
+            except StudentProfile.DoesNotExist:
+                messages.error(request, "Student profile does not exist!")
+                return redirect('error_page')
 #-----------------------------------------Teacher Dashboard-------------------------------------
 
 

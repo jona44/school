@@ -1,19 +1,29 @@
 from django.db import models
 
 from district.models import AcademicCalendar
-from schoolconfig.models import SchoolSubject
-from student.models import StudentProfile
+from schoolconfig.models import SchoolProfile, SchoolSubject
+from student.models import ClassRoom, StudentProfile
 from teacher.models import TeacherProfile
 
 # Create your models here.
 class Assignment(models.Model):
-    title       = models.CharField(max_length=255)
-    description = models.TextField()
-    subject     = models.ForeignKey(SchoolSubject, on_delete=models.CASCADE)
     teacher     = models.ForeignKey(TeacherProfile, on_delete=models.CASCADE)
-    due_date    = models.DateTimeField()
-    created_at  = models.DateTimeField(auto_now_add=True)
-    academic_year   = models.ForeignKey(AcademicCalendar, on_delete=models.CASCADE, null=True, blank=True)
+    school      = models.ForeignKey(SchoolProfile, on_delete=models.CASCADE, null=True, blank=True) # add this
+    classrooms  = models.ManyToManyField(ClassRoom)  #add this
+    subject     = models.ForeignKey(SchoolSubject, on_delete=models.CASCADE, null=True, blank=True) # add this
+    title        = models.CharField(max_length=255)
+    description  = models.TextField()
+    due_date     = models.DateTimeField()
+    created_at   = models.DateTimeField(auto_now_add=True)
+    updated_at   = models.DateTimeField(auto_now=True)
+    slug         = models.SlugField(unique=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.title + '-' + str(self.id))  # Unique slug for each Assignment
+        if not self.school:
+            self.school = self.teacher.school
+        super(Assignment, self).save(*args, **kwargs)
 
     def __str__(self):
         return self.title
