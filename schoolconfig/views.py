@@ -503,6 +503,10 @@ def class_profile_list(request):
 
 
 def class_profile_create(request):
+    school_admin = SchoolAdminProfile.objects.get(school_admin=request.user)
+    the_school   = school_admin.school
+     
+    school= SchoolProfile.objects.get(school=the_school)
     if request.method == "POST":
         form = ClassProfileForm(request.POST)
         if form.is_valid():

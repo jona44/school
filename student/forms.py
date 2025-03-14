@@ -6,6 +6,7 @@ from customadmin.models import CustomUser
 from schoolconfig.models import SchoolAdminProfile
 from .models import *
 from django.http import HttpResponseRedirect
+
 class StudentRegistrationForm(UserCreationForm):
     class Meta:
         model = CustomUser

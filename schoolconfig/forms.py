@@ -59,7 +59,6 @@ class SchoolAdminProfileForm(forms.ModelForm):
         fields = ['contact_number', 'school', 'admin','address', 'date_of_birth', 'profile_picture',]
         
         widgets = {
-            
            
            'contact_number': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -98,10 +97,13 @@ class CustomUserSearchForm(forms.Form):
 
 
 class ClassProfileForm(forms.ModelForm):
+    
     class Meta:
         model = ClassProfile
         fields = ['name', 'subjects', 'is_default']
-        widgets = {
-            'subjects': forms.CheckboxSelectMultiple(),
+        widget= {
+            'subjects': forms.CheckboxSelectMultiple(attrs={'class': 'form-control'}),
         }
-   
+ 
+        
+      

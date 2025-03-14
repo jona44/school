@@ -3,7 +3,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django import forms
 from django.shortcuts import get_object_or_404
 from customadmin.models import CustomUser
-from schoolconfig.models import ClassName, SchoolProfile, SchoolSubject,SchoolAdminProfile
+from schoolconfig.models import SchoolSubject
 from student.models import ClassRoom
 from .models import TeacherProfile
 

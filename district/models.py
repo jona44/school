@@ -68,19 +68,21 @@ class SchoolHeadProfile(models.Model):
         
         
 class SubjectsManager(models.Model):
-    cid         = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)  # UUID Field
-    subjects   = models.CharField(max_length=50, blank=True, null=True, unique=True)
-    color = models.CharField(max_length=7, blank=True, null=True)  # Store the color code
+    cid          = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)# UUID Field
+    subject_code = models.CharField(max_length=3, blank=True, null=True)
+    subjects     = models.CharField(max_length=50, blank=True, null=True, unique=True)
+    color        = models.CharField(max_length=7, blank=True, null=True)  # Store the color code
 
     def __str__(self):
-        return f'{self.subjects}'
+        return f'{self.subjects}-{self.subject_code}'
 
     class Meta:
         verbose_name_plural = 'Subjects'
 
     def save(self, *args, **kwargs):
-        if not self.color:
+        if not self.color and  not self.subject_code:
             self.color = self.generate_random_color()
+            self.subject_code = self.generate_random_code()
         super(SubjectsManager, self).save(*args, **kwargs)
 
     def generate_random_color(self):
@@ -89,6 +91,15 @@ class SubjectsManager(models.Model):
         g = random.randint(0, 255)
         b = random.randint(0, 255)
         return f"#{r:02x}{g:02x}{b:02x}"
+    
+         
+    def generate_random_code(self):
+        """Generates a random subject_code."""
+        subject_code= random.randint(100, 199)
+        return subject_code
+        
+    
+        
 
         
         
