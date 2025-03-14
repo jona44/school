@@ -1,6 +1,9 @@
 {% extends "partials/base.html" %}
+{% load assignment_tags %}
+{% load custom_tags %}
 
 {% block content %}
+
 <div class="container offset-md-1 mt-4">
     <h1 class="mb-4">Welcome to Your Student Dashboard</h1>
 
@@ -9,58 +12,86 @@
             <h2 class="card-title">Class Information</h2>
         </div>
         <div class="card-body">
-            {% if assigned_class %}
-            <div class="mb-3">
-                <p class="card-text"><strong>Your Class:</strong> {{ assigned_class }}</p>
-            </div>
-            {% else %}
-            <p class="card-text text-muted">You are not currently assigned to a class.</p>
-            {% endif %}
+            <div class="row">
+                <div class="col-md-6">
+                    {% if assigned_class %}
+                    <p class="card-text"><strong>Your Class:</strong> {{ assigned_class }}</p>
+                    {% else %}
+                    <p class="card-text text-muted">You are not currently assigned to a class.</p>
+                    {% endif %}
 
-            {% if classmates_count > 0 %}
-            <div>
-                <p class="card-text"><strong>Total Classmates:</strong> <span class="badge bg-secondary">{{ classmates_count }}</span></p>
-                <p class="card-text"><strong>Female Classmates:</strong> <span class="badge bg-pink text-white">{{ female_classmates }}</span></p>
-                <p class="card-text"><strong>Male Classmates:</strong> <span class="badge bg-primary">{{ male_classmates }}</span></p>
+                    {% if student_profile %}
+                    <a href="{% url 'student_details' pk=student_profile.pk %}">My Profile</a>
+                    {% else %}
+                    <p class="text-muted">No profile yet.</p>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    {% if classmates_count > 0 %}
+                    <p class="card-text mb-1"><strong>Total Classmates:</strong> <span class="badge bg-secondary">{{ classmates_count }}</span></p>
+                    <p class="card-text mb-1"><strong>Female Classmates:</strong> <span class="badge bg-pink text-white">{{ female_classmates }}</span></p>
+                    <p class="card-text mb-1"><strong>Male Classmates:</strong> <span class="badge bg-primary">{{ male_classmates }}</span></p>
+                    {% else %}
+                    <p class="card-text text-muted">No classmates information available.</p>
+                    {% endif %}
+                </div>
             </div>
-            {% else %}
-            <p class="card-text text-muted">No classmates information available.</p>
-            {% endif %}
-            <a href="">My Profile</a>
         </div>
     </div>
-
-    <div class="row row-cols-1 row-cols-md-3 g-4 mt-4">
+    <div class="mt-4">
+        <h2 class="mb-3">Subjects and Assignments</h2>
         {% if assigned_class and assigned_class.profile %}
+        <div class="row">
             {% for subject in assigned_class.profile.subjects.all %}
-                <div class="col">
-                    <div class="card h-100 d-flex flex-column">
-                        <div class="card-header bg-success text-white">
-                            <h5 class="card-title mb-0">{{ subject.cid }} : {{ subject }}</h5>
-                        </div>
-                        <div class="card-body flex-grow-1">
-                            {% if subject.assignment_set.all %}
-                            <ul class="list-group list-group-flush ">
-                                {% for assignment in subject.assignment_set.all %}
-                                    <li class="list-group-item">
-                                        <a href="{{ assignment.file.url }}" target="_blank">{{ assignment.title }}</a>
-                                    </li>
-                                {% endfor %}
-                            </ul>
-                            {% else %}
-                                <p class="card-text text-muted">No assignments yet for this subject.</p>
-                            {% endif %}
-                        </div>
-                        <div class="card-footer">
-                            <a href="{% url 'assignments_list' subject.id %}" >View Assignments</a>
-                        </div>
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <div class="card-header" style="color : white;background-color:{{ subject.colours|default:'#ffffff' }};">
+
+                        <h5 class="card-title ">{{ subject }}</h5>
+                    </div>
+                    <div class="card-body p-2">
+                        <ul class="list-unstyled">
+                            {% comment %}
+                            Filter assignments to only show those for this subject AND for the assigned class
+                            {% endcomment %}
+                            {% for assignment in assignments_by_class_and_subject|get_item:subject.id %}
+                            <li class="mb-1">
+                                <div class="d-flex align-items-center">
+                                    <a href="{% url 'assignments_list' subject_canon %}" class="text-decoration-none flex-grow-1">
+                                        {{ assignment.title }}
+                                    </a>
+                                    {% if request.user.studentprofile %}
+                                        {% has_student_submitted assignment request.user.studentprofile as submitted %}
+                                        {% if submitted %}
+                                            <span class="badge bg-success ms-2">Submitted</span>
+                                        {% else %}
+                                            {% is_assignment_overdue assignment today as overdue %}
+                                            {% if overdue %}
+                                                <span class="badge bg-danger ms-2">Overdue</span>
+                                            {% else %}
+                                                <span class="badge bg-warning ms-2">Pending</span>
+                                            {% endif %}
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            </li>
+                            {% empty %}
+                            <li class="text-muted">No assignment for this subject</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="card-footer">
+                        <a href="{% url 'assignments_list' subject.id %}" class="text-decoration-none">View All</a>
                     </div>
                 </div>
+            </div>
             {% endfor %}
+        </div>
         {% else %}
-            <p class="text-muted">No subjects assigned</p>
+        <p class="text-muted">No subjects assigned</p>
         {% endif %}
     </div>
 
 </div>
+
 {% endblock %}
