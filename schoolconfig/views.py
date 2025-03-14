@@ -495,6 +495,7 @@ def search_custom_user(request):
 
 
 def class_profile_list(request):
+    
     class_profiles = ClassProfile.objects.all()
     return render(request, 'schoolconfig/class_profile_list.html', {'class_profiles': class_profiles})
 

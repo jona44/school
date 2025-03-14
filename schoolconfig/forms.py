@@ -104,4 +104,4 @@ class ClassProfileForm(forms.ModelForm):
         widgets = {
             'subjects': forms.CheckboxSelectMultiple(),
         }
-        
+   
