@@ -24,22 +24,24 @@ def assignments_list(request, subject_id):
     return render(request, 'assignment/assignments_list.html', context)
 
 
+
 @login_required
 def create_assignment(request, subject_id):
     subject = get_object_or_404(SchoolSubject, pk=subject_id)
     teacher_profile = get_teacher_profile(request.user)
 
     if request.method == 'POST':
-        form = AssignmentCreateForm(request.POST)
+        form = AssignmentCreateForm(request.POST, teacher=teacher_profile)
         if form.is_valid():
             assignment = form.save(commit=False)
             assignment.teacher = teacher_profile
-            assignment.subject = subject
+            assignment.subject = subject  # Set the subject here
             assignment.save()
+            form.cleaned_data['classrooms'].set(assignment.classrooms.all())
             messages.success(request, 'Assignment created successfully!')
             return redirect('teacher_dashboard')
     else:
-        form = AssignmentCreateForm()
+        form = AssignmentCreateForm(teacher=teacher_profile)
 
     assignments = Assignment.objects.filter(teacher=teacher_profile, subject=subject).order_by('-due_date')
 
