@@ -1,0 +1,20 @@
+/* Custom CSS for column striping */
+.table-striped-columns th.bg-term-1,
+.table-striped-columns td.bg-term-1 {
+  background-color: #e680808c; /* Light gray for Term 1 */
+}
+
+.table-striped-columns th.bg-term-2,
+.table-striped-columns td.bg-term-2 {
+  background-color: #6290be70; /* Slightly darker gray for Term 2 */
+}
+
+.table-striped-columns th.bg-term-3,
+.table-striped-columns td.bg-term-3 {
+  background-color: #5dbd719f; /* Light gray for Term 3 */
+}
+
+.table-striped-columns th.bg-term-4,
+.table-striped-columns td.bg-term-4 {
+  background-color: #86a34bbe; /* Slightly darker gray for Term 4 */
+}

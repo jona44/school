@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'schoolconfig',
     'debug_toolbar',
     'django_extensions',
+    'assignment',
     
     
     'django.contrib.sites',  # Required by Allauth
@@ -53,7 +54,7 @@ AUTH_USER_MODEL = 'customadmin.CustomUser'
 
 AUTHENTICATION_BACKENDS = [
      'allauth.account.auth_backends.AuthenticationBackend',  # Allauth backend
-     'django.contrib.auth.backends.ModelBackend',
+    #  'django.contrib.auth.backends.ModelBackend',
    
 ]
 

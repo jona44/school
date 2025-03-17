@@ -1,0 +1,40 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Class Profiles</h2>
+    <a href="{% url 'class_profile_create' %}" class="btn btn-primary mb-3">Create New Class Profile</a>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Subjects</th>
+                <th>Default</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for profile in class_profiles %}
+            <tr>
+                <td>{{ profile.name }}</td>
+                <td>
+                    {% for subject in profile.subjects.all %}
+                        {{ subject }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                </td>
+                <td>{% if profile.is_default %}✅{% else %}❌{% endif %}</td>
+                <td>
+                    <a href="{% url 'class_profile_update' profile.id %}" class="btn btn-warning btn-sm">Edit</a>
+                    <a href="{% url 'class_profile_delete' profile.id %}" class="btn btn-danger btn-sm">Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4">No class profiles available.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <a href="{% url 'create_classroom' %}"class="btn btn-dark ">(Next)  Create Class </a>
+</div>
+{% endblock %}

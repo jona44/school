@@ -14,7 +14,7 @@ from .forms import CustomUserSearchForm
 
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser or u.user_type == 'District_admin')
+@user_passes_test(lambda u: u.is_superuser or u.user_type == 'district_admin')
 def assign_schoolAdmin(request, user_id):
     """
     View to create a SchoolAdmin for a given CustomUser.
@@ -147,6 +147,40 @@ def update_schoolprofile(request, pk):
 #-----------------------------------create_schoolsubjects_step2------------------------------
 
 
+# @login_required
+# @user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='school_admin').exists())
+# def select_school_subjects_step2(request):
+#     """
+#     Handles the creation of SchoolSubject instances for a specific school.
+
+#     Ensures each SchoolSubject instance is created per subject.
+#     """
+#     school_admin_profile = get_object_or_404(SchoolAdminProfile, school_admin=request.user)
+#     registered_school = school_admin_profile.school
+
+#     if request.method == 'POST':
+#         form = SchoolSubjectForm(request.POST)
+#         if form.is_valid():
+#             subjects = form.cleaned_data['school_subjects']
+
+#             # Ensure the school profile exists
+#             school_profile, _ = SchoolProfile.objects.get_or_create(school=registered_school)
+
+#             # Delete existing subject relations (optional: only remove subjects not in the new selection)
+#             SchoolSubject.objects.filter(school=school_profile).delete()
+
+#             # Create a SchoolSubject instance and assign subjects properly
+#             school_subject = SchoolSubject.objects.create(school=school_profile)
+#             school_subject.subjects.add(*subjects)
+#             school_subject.save()
+
+#             return redirect('subject_list')
+#     else:
+#         form = SchoolSubjectForm()
+
+#     return render(request, 'schoolconfig/select_school_subjects_step2.html', {'form': form})
+
+
 @login_required
 @user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='school_admin').exists())
 def select_school_subjects_step2(request):
@@ -168,7 +202,7 @@ def select_school_subjects_step2(request):
             try:
                 school_profile = SchoolProfile.objects.get(school=registered_school)
             except SchoolProfile.DoesNotExist:
-                return render(request, 'schoolconfig/error.html', {'message': 'School profile does not exist.'})
+                return render(request, 'customsettings/error.html', {'message': 'School profile does not exist.'})
 
             # Delete existing SchoolSubject instances for this school profile
             SchoolSubject.objects.filter(school=school_profile).delete()
@@ -206,22 +240,26 @@ def subject_list(request, pk=None):
 @login_required
 @user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='school_admin').exists())
 def edit_schoolsubjects(request, pk):
-    school_subject = SchoolSubject.objects.get(pk=pk)
+    school_subject = get_object_or_404(SchoolSubject, pk=pk)
+
+    # Ensure the logged-in admin can only edit subjects from their school
+    profile = get_object_or_404(SchoolAdminProfile, school_admin=request.user)
+    if school_subject.school != profile.school:
+        return render(request, 'schoolconfig/error.html', {'message': 'Unauthorized access.'})
 
     if request.method == 'POST':
         form = SchoolSubjectForm(request.POST, instance=school_subject)
         if form.is_valid():
             edited = form.save(commit=False)
             edited.save()
-            return redirect('subject_list')  # Replace with your success URL
+            form.save_m2m()  # Ensure ManyToMany relations are saved
+            return redirect('subject_list')  # Update with actual URL name
     else:
         form = SchoolSubjectForm(instance=school_subject)
 
     return render(request, 'schoolconfig/edit_schoolsubjects.html', {'form': form})
 
-
 #-----------------------------------ClassName----------------------------------------
-
 
 @login_required
 @user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='school_admin').exists())
@@ -229,24 +267,22 @@ def class_name(request):
     """
     View to manually create class names based on GradeLevels and SchoolName
     """
-    # Retrieve the SchoolAdminProfile for the logged-in user
     profile = get_object_or_404(SchoolAdminProfile, school_admin=request.user)
-    school = profile.school  # This should be a SchoolProfile instance
+    school = profile.school  
     registered_school = SchoolProfile.objects.filter(school=school).first()
-                                               # Ensure there's a current academic year defined
+
     try:
         academic_year = AcademicCalendar.objects.get(is_current=True)
     except AcademicCalendar.DoesNotExist:
         messages.error(request, "No current academic year found. Please define one.")
-        return redirect('class_name')  # Or handle the error differently
+        return redirect('class_name')
 
     if request.method == 'POST':
-        form = ClassNameForm(request.POST)
+        form = ClassNameForm(request.POST, schoolprofile=registered_school, academic_year=academic_year)
         if form.is_valid():
             grade_level = form.cleaned_data['grd_level']
             classname = form.cleaned_data['classname']
 
-            # Check if the class name already exists for the combination
             existing_class = ClassName.objects.filter(
                 schoolprofile=registered_school,
                 grd_level=grade_level,
@@ -267,9 +303,11 @@ def class_name(request):
                 messages.success(request, "Class name has been created successfully.")
                 return redirect('class_name')
     else:
-        form = ClassNameForm()
-        allclasses = ClassName.objects.filter(schoolprofile=registered_school)
-    return render(request, 'schoolconfig/class_name.html', {'form': form, 'allclasses':allclasses})
+        form = ClassNameForm(schoolprofile=registered_school, academic_year=academic_year)
+
+    allclasses = ClassName.objects.filter(schoolprofile=registered_school)
+
+    return render(request, 'schoolconfig/class_name.html', {'form': form, 'allclasses': allclasses})
 
 #-----------------------------------is_setup_complete------------------------------
 
@@ -393,6 +431,8 @@ def schoolAdmin_profile(request, profile_id):
         form = SchoolAdminProfileForm(request.POST, instance=profile)
         if form.is_valid():
             profile = form.save(commit=False)
+             # Ensure the CustomUser is assigned to the profile
+            profile.email = user.email  # Assign the user's email to the profile
             profile.is_complete = True  # Set is_complete to True
             profile.save()
             messages.success(request, 'SchoolAdmin Profile updated successfully.')
@@ -450,3 +490,57 @@ def search_custom_user(request):
             results = [{'id': user.id, 'name': f'{user.first_name} {user.last_name}', 'email': user.email} for user in users]
             return JsonResponse({'results': results})
     return JsonResponse({'results': []})
+
+#-----------------------------------class_profile_list--------------------------------------------
+
+
+def class_profile_list(request):
+    
+    class_profiles = ClassProfile.objects.all()
+    return render(request, 'schoolconfig/class_profile_list.html', {'class_profiles': class_profiles})
+
+#-----------------------------------class_profile_create--------------------------------------------
+
+
+def class_profile_create(request):
+    school_admin = SchoolAdminProfile.objects.get(school_admin=request.user)
+    the_school   = school_admin.school
+     
+    school= SchoolProfile.objects.get(school=the_school)
+    if request.method == "POST":
+        form = ClassProfileForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Class profile created successfully.")
+            return redirect('class_profile_list')
+    else:
+        form = ClassProfileForm()
+    return render(request, 'schoolconfig/class_profile_form.html', {'form': form})
+
+
+#-----------------------------------class_profile_update--------------------------------------------
+
+
+def class_profile_update(request, pk):
+    class_profile = ClassProfile.objects.get(pk=pk)
+    if request.method == "POST":
+        form = ClassProfileForm(request.POST, instance=class_profile)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Class profile updated successfully.")
+            return redirect('class_profile_list')
+    else:
+        form = ClassProfileForm(instance=class_profile)
+    return render(request, 'schoolconfig/class_profile_form.html', {'form': form})
+
+#-----------------------------------class_profile_delete--------------------------------------------
+
+
+def class_profile_delete(request, pk):
+    class_profile = ClassProfile.objects.get(pk=pk)
+    if request.method == "POST":
+        class_profile.delete()
+        messages.success(request, "Class profile deleted successfully.")
+        return redirect('class_profile_list')
+    return render(request, 'schoolconfig/class_profile_confirm_delete.html', {'class_profile': class_profile})
+

@@ -3,10 +3,9 @@ from django.contrib.auth.forms import UserCreationForm
 from django import forms
 from django.shortcuts import get_object_or_404
 from customadmin.models import CustomUser
-from schoolconfig.models import ClassName, SchoolProfile, SchoolSubject,SchoolAdminProfile
+from schoolconfig.models import SchoolSubject
 from student.models import ClassRoom
 from .models import TeacherProfile
-
 
 
 class TeacherRegistrationForm(UserCreationForm):
@@ -88,7 +87,6 @@ class UpdateStaffProfileForm(forms.ModelForm):
             'contact_number': forms.TextInput(attrs={
                 'class': 'form-control',
                }),
-
             
             'assigned_class': forms.Select(attrs={
                 'class': 'form-control', 'style': 'width:150px',
@@ -105,4 +103,7 @@ class UpdateStaffProfileForm(forms.ModelForm):
             'subjects_taught': forms.CheckboxSelectMultiple(attrs={
                 'class': 'form-check-input'}),
         }
-   
+        
+        
+
+

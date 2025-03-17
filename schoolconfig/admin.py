@@ -7,4 +7,5 @@ admin.site.register(SchoolSubject)
 admin.site.register(GradeLevel)
 admin.site.register(ClassName)
 admin.site.register(SchoolAdminProfile)
+admin.site.register(ClassProfile)
 

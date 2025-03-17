@@ -1,0 +1,12 @@
+teacher1@gmail.com    munyaradzi
+teacher2@gmail.com
+teacher3@gmail.com
+teacher4@gmail.com
+teacher5@gmail.com
+teacher6@gmail.com
+teacher7@gmail.com
+teacher8@gmail.com
+teacher9@gmail.com
+teacher10@gmail.com          munyaradzi
+
+student1@gmail.com

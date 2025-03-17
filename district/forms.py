@@ -3,7 +3,7 @@ from django.contrib.auth.forms import UserCreationForm
 from customadmin.models import CustomUser
 from schoolconfig.models import SchoolAdminProfile
 from teacher.models import TeacherProfile
-from . models import AcademicCalendar, District,District_School_Registration, DistrictAdminProfile, Holiday, SchoolHeadProfile, Subjects
+from . models import AcademicCalendar, District,District_School_Registration, DistrictAdminProfile, Holiday, SchoolHeadProfile, SubjectsManager
 
 
 
@@ -77,6 +77,23 @@ class    SchoolHeadRegistrationForm(UserCreationForm):
                 }),
          }
         
+class    DistrictAdminRegistrationForm(UserCreationForm):
+    class Meta:
+        model = CustomUser
+        fields = ('email', 'first_name', 'last_name','password1','password2' )
+        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Apply Bootstrap classes to all fields
+        for field_name, field in self.fields.items():
+            if field.widget.attrs:
+                field.widget.attrs['class'] = field.widget.attrs.get('class', '') + ' form-control'
+            else:
+                field.widget.attrs = {'class': 'form-control'}    
+                
+                
+                
 class    SchoolAdminRegistrationForm(UserCreationForm):
     class Meta:
         model = CustomUser
@@ -148,7 +165,7 @@ class SchoolHeadProfileForm(forms.ModelForm):
 
 class SubjectForm(forms.ModelForm):
     class Meta:
-        model  = Subjects
+        model  = SubjectsManager
         fields = ['subjects']
 
 
@@ -208,15 +225,14 @@ class HolidayForm(forms.ModelForm):
         widgets = {
             'name': forms.TextInput(attrs={
                 'class': 'form-control',
-                'style': ' background-color: #474955; color:white ;',
+                'style': ' box-shadow: 0 0 0 0.2rem rgba(0, 255, 0, 0.25);',
                 }),
             'date': forms.DateInput(attrs={
                 'class': 'form-control',
                 'type': 'date',
-                'style': 'width: 150px; background-color: #474955; color:white',
+                'style': 'width: 350px; box-shadow: 0 0 0 0.2rem rgba(0, 255, 0, 0.25);',
                 }),
         }        
-        
         
         
 class DistrictForm(forms.ModelForm):
@@ -242,14 +258,18 @@ class AssignSchoolAdminForm(forms.ModelForm):
 class AssignSchoolHeadForm(forms.ModelForm):
     class Meta:
         model = SchoolHeadProfile 
-        fields = ['school','head']
+        fields = ['school','school_head']
         widgets = {
             'school': forms.Select(attrs={
                 'class': 'form-control',
                 
                 }),
-            'head': forms.Select(attrs={
+            'school_head': forms.Select(attrs={
                 'class': 'form-control',
                
                 }),
-        }        
+        }    
+        
+ # Create a form for group creation
+class GroupForm(forms.Form):
+    name = forms.CharField(max_length=150, required=True, label="Group Name")           

@@ -3,11 +3,9 @@
 
 {% block content %}
 <div class="container offset-md mt-5">
-    <div class="col-md-8    rounded p-3 rounded">
+    <div class="col-md-8 shadow   rounded p-3 rounded">
         <h3 > Subject Form</h3>
-        {% for subject in all_subjects%}
-        <span class="badge bg-dark">{{subject}}</span>
-        {%endfor%}
+        
         <form method="post">
             {% csrf_token %}
             {{ form|crispy }}
@@ -15,8 +13,10 @@
                 <button type="submit" class="btn btn-dark">Save 
                  </button> 
             </div>
-            
         </form>
+        {% for subject in all_subjects%}
+        <span class="badge" style="background-color:{{subject.color}};">--{{subject}}--</span>
+        {%endfor%}
     </div>
 </div>
   

@@ -116,17 +116,22 @@ def create_districtAdmin_profile(request, user_id):
 @login_required
 @user_passes_test(lambda u: u.is_superuser or u.user_type == 'District_admin')
 def create_schoolHead_profile(request, user_id):
-   # View for creating or updating a SchoolHead profile associated with a user.
+    # View for creating or updating a SchoolHead profile associated with a user.
     user = CustomUser.objects.get(pk=user_id)  # Get the user from the passed user_id
+    
     # Check if a SchoolHead profile already exists for this user
     try:
         school_head = SchoolHeadProfile.objects.get(school_head=user)
         # Existing profile, display update form
-        form = SchoolHeadProfileForm(instance=school_head) 
+        form = SchoolHeadProfileForm(instance=school_head)
         if request.method == 'POST':
             form = SchoolHeadProfileForm(request.POST, instance=school_head)
             if form.is_valid():
-                form.save()
+                # Set the user who updated the profile
+                school_head = form.save(commit=False)
+                school_head.created_by = request.user  # Track who updated the profile
+                school_head.save()
+                messages.success(request, f'{user.get_full_name()} profile updated successfully.')
                 return redirect('schoolHead_profile_detail', profile_id=school_head.id)  # Redirect to the same view
     except SchoolHeadProfile.DoesNotExist:
         # No existing profile, display creation form
@@ -136,14 +141,17 @@ def create_schoolHead_profile(request, user_id):
             if form.is_valid():
                 school_head = form.save(commit=False)
                 school_head.school_head = user
+                school_head.created_by = request.user  # Track who created the profile
                 school_head.save()
-                return redirect('schoolHead_profile_detail', profile_id=school_head.id) 
+                messages.success(request, f'{user.get_full_name()} profile created successfully.')
+                return redirect('schoolHead_profile_detail', profile_id=school_head.id)
 
     context = {
         'form': form,
         'user': user,
     }
     return render(request, 'district/create_schoolHead_profile.html', context)
+
 
 
 #----------------------------------- school_list---------------------------------
@@ -174,6 +182,8 @@ def create_school(request):
         form = SchoolRegistrationForm(request.POST)
         if form.is_valid():
             school=form.save(commit=False)
+            school.created_by = request.user
+            
             school.save()
             return redirect('school_detail', school_id=school.id)   # Redirect to a list of schools or relevant page
     else:
@@ -186,13 +196,6 @@ def create_school(request):
 
 def activation_sent(request):
     return render(request, 'district/activation_sent.html')  
-
-  
-#-------------------------------password_reset---------------------------
-
-
-
-    
 
 
 #-------------------------------activate_account---------------------------
@@ -250,7 +253,7 @@ def  registration_complete(request):
 @login_required
 @user_passes_test(lambda u: u.is_superuser or u.user_type == 'district_admin')
 def create_subject(request):
-    all_subjects = Subjects.objects.all()
+    all_subjects = SubjectsManager.objects.all()
     if request.method == 'POST':
         form = SubjectForm(request.POST)
         if form.is_valid():
@@ -317,15 +320,6 @@ def grade_level(request):
 
 
 
-
-@require_POST 
-def logout_view(request):
-    logout(request)
-    return redirect('login')  
-
-
-
-
 def teacher_list_view(request):
     # Retrieve all teacher profiles
     teachers = TeacherProfile.objects.select_related('teacher', 'school', 'base_subject', 'assigned_class').all()
@@ -368,6 +362,7 @@ def create_district(request):
         form = DistrictForm(request.POST)
         if form.is_valid():
             district=form.save(commit=False)
+            district.created_by = request.user
             district.save()
             return redirect('school_list')   # Redirect to a list of schools or relevant page
     else:
@@ -448,14 +443,6 @@ def assign_schoolHead(request, user_id):
     return render(request, 'schoolconfig/assign_schoolAdmin.html', context)
 
 
-from django.contrib.auth.tokens import default_token_generator
-from django.utils.http import urlsafe_base64_encode
-from django.utils.encoding import force_bytes
-from django.core.mail import send_mail
-from django.contrib.sites.shortcuts import get_current_site
-from django.template.loader import render_to_string
-from django.conf import settings
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -491,3 +478,69 @@ def password_reset(request):
             messages.error(request, 'No user found with this email address.')
 
     return render(request, 'district/password_reset.html')
+
+
+# View to create a group
+def create_group(request):
+    if request.method == "POST":
+        form = GroupForm(request.POST)
+        if form.is_valid():
+            group_name = form.cleaned_data['name']
+            # Check if group already exists
+            if not Group.objects.filter(name=group_name).exists():
+                Group.objects.create(name=group_name)
+                messages.success(request, f"Group '{group_name}' created successfully!")
+                return redirect('create_group')  # Adjust the redirect as needed
+            else:
+                messages.error(request, f"Group '{group_name}' already exists.")
+    else:
+        form = GroupForm()
+    
+    groups = Group.objects.all()  # Fetch all groups
+    return render(request, 'district/make_group.html', {'form': form, 'groups': groups})
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser or u.user_type == 'district_admin')
+def register_district_admin(request):
+    form =DistrictAdminRegistrationForm()
+
+    if request.method == 'POST':
+        form =DistrictAdminRegistrationForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.is_active = False  # Set user as inactive until activation
+            user.user_type = 'district_admin'  # Set user_type to district_admin
+            user.save()
+
+            # Assign the user to the 'district_admin' group
+            group_name = 'district_admin'
+            desired_group = Group.objects.get(name=group_name)
+            user.groups.add(desired_group)
+
+            # Send activation email
+            current_site = get_current_site(request)
+            protocol = 'https' if request.is_secure() else 'http'
+            subject = 'Activate Your Account'
+            message = render_to_string('district/activation_email.html', {
+                'user': user,
+                'domain': current_site.domain,
+                'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+                'token': default_token_generator.make_token(user),
+                'protocol': protocol,
+            })
+            send_mail(
+                subject,
+                '',  # The message parameter will be used for the email body
+                settings.EMAIL_HOST_USER,  # Replace with your email address
+                [user.email],  # Send to the user's email address
+                fail_silently=False,
+                html_message=message,  # Pass the 'message' as HTML content
+            )
+
+            # Redirect to the profile creation view for school head
+            return redirect('create_districtAdmin_profile', user_id=user.id)
+        else:
+            messages.error(request, 'Form submission failed. Please correct the errors below.')
+
+    return render(request, 'district/register_district_admin.html', {'form': form})

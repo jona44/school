@@ -1,13 +1,17 @@
+from datetime import datetime
 from django.db import models
 from django.urls import reverse
 from customadmin.models import  CustomUser
 from schoolconfig.models import *
-from student.models import ClassRoom
+from student.models import ClassRoom, StudentProfile
+from django.conf import settings
+import os
+from django.utils.timezone import now
 
 class TeacherProfile(models.Model):
     school          = models.ForeignKey(SchoolProfile, on_delete=models.CASCADE, blank=True, null=True, related_name='teacher_profiles')
     teacher         = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
-    base_subject    = models.ForeignKey(SchoolSubject, on_delete=models.CASCADE, null=True, blank=True,related_name='base_subject_teacher_profiles')
+    base_subject    = models.ForeignKey(SchoolSubject, on_delete=models.CASCADE, null=True, blank=True, related_name='base_subject_teacher_profiles')
     assigned_class  = models.ForeignKey(ClassRoom, on_delete=models.SET_NULL, null=True, blank=True, related_name='base_class')
     classes_taught  = models.ManyToManyField(ClassRoom,  related_name='teacher')
     subjects_taught = models.ManyToManyField(SchoolSubject, related_name='teacher_subjects')
@@ -36,7 +40,15 @@ class TeacherProfile(models.Model):
     def get_base_class(self):
         return self.base_class
 
+    @staticmethod
+    def get_teacher_profile(teacher_id):
+        try:
+            return TeacherProfile.objects.get(teacher__id=teacher_id)
+        except TeacherProfile.DoesNotExist:
+            return None
+
   
 
 
+ 
 

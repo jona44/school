@@ -1,15 +1,24 @@
+from django.contrib import messages
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db import IntegrityError
 from django.views import View
 from grading.forms import *
 from grading.models import *
-from teacher.models import TeacherProfile
+from teacher.models import *
 from student.models import ClassRoom
 from django.db.models import Avg
 from django.urls import reverse
-from district.models import Subjects
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from .models import  Capture, SchoolSubject, AcademicCalendar, CapturedClassroom
+from .forms import  *
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from core.utils import get_teacher_profile
 
+
+@login_required
 def capture(request, subject_id):
     subject = get_object_or_404(SchoolSubject, pk=subject_id)
     academic_year = get_object_or_404(AcademicCalendar, is_current=True)
@@ -29,7 +38,7 @@ def capture(request, subject_id):
             'capture': capture_instance,
             'is_done': is_done
         })
-
+    form = CaptureForm()
     if request.method == 'POST':
         if 'capture_id' in request.POST:
             capture_id = request.POST['capture_id']
@@ -60,10 +69,7 @@ def capture(request, subject_id):
                         academic_year=academic_year,
                     )
                     capture_instance.select_classes.set(select_classes)
-
                 return redirect('captured_classroom', capture_id=capture_instance.id)
-    else:
-        form = CaptureForm()
 
     context = {
         'form': form,
@@ -330,4 +336,4 @@ def categorize_grade(grade):
     else:
         return 'F'
 
-                         
+

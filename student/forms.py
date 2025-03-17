@@ -3,10 +3,9 @@ from django.contrib.auth.forms import UserCreationForm
 from django import forms
 from django.shortcuts import get_object_or_404
 from customadmin.models import CustomUser
-from schoolconfig.models import Subjects ,SchoolAdminProfile
+from schoolconfig.models import SchoolAdminProfile
 from .models import *
 from django.http import HttpResponseRedirect
-
 
 class StudentRegistrationForm(UserCreationForm):
     class Meta:
@@ -123,16 +122,20 @@ class EditStudentProfileForm(forms.ModelForm):
         }
 
 
+
+from django import forms
+from .models import ClassRoom, ClassProfile, ClassName
+
 class CreateClassRoomForm(forms.ModelForm):
     class Meta:
-        model  = ClassRoom  
-        fields = [ 'grd_level','name', 'class_teacher']
+        model = ClassRoom  
+        fields = ['grd_level', 'name', 'class_teacher', 'profile']
 
     def __init__(self, *args, **kwargs):
         school = kwargs.pop('school', None)
-        year = kwargs.pop('year', None)  # Add year to filter teachers based on the academic year
+        year = kwargs.pop('year', None)  # Used to filter teachers based on academic year
         super(CreateClassRoomForm, self).__init__(*args, **kwargs)
-        
+
         if school and year:
             # Exclude classrooms that already exist for the given school and year
             existing_classrooms = ClassRoom.objects.filter(school=school, year=year).values_list('name', flat=True)
@@ -144,13 +147,31 @@ class CreateClassRoomForm(forms.ModelForm):
                 groups__name='teacher', 
                 teacherprofile__school=school.id
             ).exclude(id__in=assigned_teachers)
+
+        # Ensure the class profile field is populated with available profiles
+        self.fields['profile'].queryset = ClassProfile.objects.all()
+        self.fields['profile'].required = False  # Allow auto-assignment of default profile
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+
+        # Assign default class profile if none is selected
+        if not instance.profile:
+            instance.profile = ClassProfile.objects.filter(is_default=True).first()
+
+        if commit:
+            instance.save()
+            self.save_m2m()  # Required for ManyToMany relationships
+
+        return instance
+
                  
             
             
 class EditClassRoomForm(forms.ModelForm):
     class Meta:
         model = ClassRoom
-        fields = ['name', 'grd_level', 'class_teacher']
+        fields = ['name', 'grd_level', 'class_teacher','profile']
         widgets = {
             'name': forms.Select(attrs={
                 'class': 'form-control',
@@ -232,3 +253,8 @@ class ExtraCurricularActivityForm(forms.ModelForm):
 class JoinActivityForm(forms.Form):
    
     activity_id = forms.ModelChoiceField(queryset=ExtraCurricularActivity.objects.all(), label="Activity")
+    
+
+
+
+

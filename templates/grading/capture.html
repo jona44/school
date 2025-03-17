@@ -5,34 +5,46 @@
 
 <div class="container offset-2 mt-4 scroll-container shado p-2 border">
   <div >
-      <h2 class="text-dark bg-secondary p-2">Select or Create Capture for <span class="text-light">{{ subject }}</span> </h2>
+      <h2 class="text-dark bg-secondary p-2">Select or Create Capture for <span class="text-light">{{ subject.id }} {{ subject }}</span> </h2>
       <h6 class="text-primary">Existing Captures</h6>
       <div class="scroll-container bg1 p-2 mb-2" style="height: 200px;">
-        <ul >
-          {% for capture_dict in captures_with_status %}
-          <li>
-              <form method="post" action="{% url 'capture' subject.id %}">
-                  {% csrf_token %}
-                  <input type="hidden" name="capture_id" value="{{ capture_dict.capture.id }}">
-                  <button type="submit" class="btn " >
-                      <strong>Type:</strong> {{ capture_dict.capture.test_type }} 
-                      <strong>Topic:</strong> {{ capture_dict.capture.topic }}
-                      <strong>Status:</strong> 
-                      {% if capture_dict.is_done %}
-                      <span class="badge rounded-pill bg-info">Completed</span>
-                      {% else %}
-                      <span class="badge rounded-pill bg-warning">In Progress</span>
-                      {% endif %}
-                  </button> 
-              </form><br>
-          </li>
-          {% endfor %}
-      </ul>
+        <table class="table table-striped">
+          <thead>
+        <tr>
+          <th>Type</th>
+          <th>Topic</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+          </thead>
+          <tbody>
+        {% for capture_dict in captures_with_status %}
+        <tr>
+          <td>{{ capture_dict.capture.test_type }}</td>
+          <td>{{ capture_dict.capture.topic }}</td>
+          <td>
+            {% if capture_dict.is_done %}
+            <span class="badge rounded-pill bg-info">Completed</span>
+            {% else %}
+            <span class="badge rounded-pill bg-warning">In Progress</span>
+            {% endif %}
+          </td>
+          <td>
+            <form method="post" action="{% url 'capture' subject.id %}">
+          {% csrf_token %}
+          <input type="hidden" name="capture_id" value="{{ capture_dict.capture.id }}">
+          <button type="submit" class="btn btn-primary">Select</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+          </tbody>
+        </table>
       </div>
       
   </div>
   
-  <button id="toggleForm" class="btn btn-secondary">Create New Capture</button>
+  <button id="toggleForm" class="btn btn-secondary" aria-expanded="false">Create New Capture</button>
 
   <div id="captureForm" style="display:none; margin-top: 20px;">
       <form method="post">
@@ -44,6 +56,13 @@
          
       </form>
   </div>
+  
+        <style>
+        .hidden-form {
+            display: none;
+            margin-top: 20px;
+        }
+        </style>
   
   <script>
       document.getElementById("toggleForm").addEventListener("click", function() {

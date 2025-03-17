@@ -24,5 +24,10 @@ urlpatterns = [
     path('update_custom_user/<int:user_id>/', views.update_custom_user, name='update_custom_user'),
     path('user/<int:user_id>/', views.user_detail, name='user_detail'),
     path('search_custom_user/', views.search_custom_user, name='search_custom_user'),
+    
+    path('class_profiles/', views.class_profile_list, name='class_profile_list'),
+    path('class_profiles/new/', views.class_profile_create, name='class_profile_create'),
+    path('class_profiles/<int:pk>/edit/', views.class_profile_update, name='class_profile_update'),
+    path('class_profiles/<int:pk>/delete/', views.class_profile_delete, name='class_profile_delete'),
 
 ]

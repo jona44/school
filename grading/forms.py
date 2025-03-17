@@ -1,7 +1,7 @@
 from django import forms
 from customadmin.models import CustomUser
-from .models import *
 from django import forms
+from grading.models import Capture, CapturedClassroom, GetMark
 
 
 class CaptureForm(forms.ModelForm):
@@ -28,4 +28,5 @@ class EditMarkForm(forms.ModelForm):
     class Meta:
         model  = GetMark
         fields = [ 'mark'] 
+
 
