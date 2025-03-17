@@ -1,7 +1,7 @@
 # Inside assignment/templatetags/assignment_tags.py
 from django import template
 from assignment.models import AssignmentSubmission
-from datetime import date
+from datetime import date, datetime
 
 register = template.Library()
 
@@ -14,8 +14,20 @@ def has_student_submitted(assignment, student_profile):
         assignment=assignment, student=student_profile
     ).exists()
 
+
+
 @register.simple_tag
 def is_assignment_overdue(assignment, today):
-    """Checks if an assignment is overdue."""
+    # If today is empty or None, use the current date
+    if not today:
+        today = date.today()
+    elif isinstance(today, str):
+        try:
+            today = datetime.strptime(today, "%Y-%m-%d").date()
+        except ValueError:
+            today = date.today()  # Fallback to current date if parsing fails
+    
     return assignment.due_date.date() < today
+
+
 

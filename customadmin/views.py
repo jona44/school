@@ -22,7 +22,10 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from schoolconfig.models import SchoolProfile, SchoolSubject, SchoolAdminProfile
 from teacher.models import TeacherProfile
 from student.models import StudentProfile
-
+from django.shortcuts import render, get_object_or_404
+from django.contrib import messages
+from django.utils import timezone
+from collections import defaultdict
 from . forms import *
 import logging
 
@@ -36,50 +39,45 @@ def dashboard(request):
 
 #--------------------------------------Student Dashboard---------------------------------------
 
-    if request.user.groups.filter(name='student').exists():
-            
-            try:
-                student = get_object_or_404(StudentProfile, student=request.user)
-                assigned_class = student.assigned_class if student.assigned_class else None
-                student_profile = student
-                
-                classmates_count = 0
-                female_classmates = 0
-                male_classmates = 0
-                
-                if assigned_class:
-                    classmates = StudentProfile.objects.filter(assigned_class=assigned_class, school = student.school)
-                    classmates_count = classmates.count()
-                    female_classmates = classmates.filter(gender='Female').count()
-                    male_classmates = classmates.filter(gender='Male').count()
-                    
-                    # Get all the assignments for that class and school
-                    assignments = Assignment.objects.filter(classrooms=assigned_class, school=student.school)
 
-                else:
-                    assignments = [] #or none
+
+    if request.user.groups.filter(name='student').exists():
+        try:
+            student = get_object_or_404(StudentProfile, student=request.user)
+            assigned_class = student.assigned_class
+            student_profile = student
+
+            classmates_count = female_classmates = male_classmates = 0
+            assignments_by_class_and_subject = defaultdict(list)
+
+            if assigned_class:
+                classmates = StudentProfile.objects.filter(assigned_class=assigned_class)
+                classmates_count = classmates.count()
+                female_classmates = classmates.filter(gender='Female').count()
+                male_classmates = classmates.filter(gender='Male').count()
+
+                # Fetch assignments that belong to the student's class
+                assignments = Assignment.objects.filter(classrooms__in=[assigned_class])
                 
-                # Group the assignments by the subject ID.
-                assignments_by_class_and_subject = {}
+                # Group assignments by subject
                 for assignment in assignments:
-                    # we ensure the subject id exist first
-                    if assignment.subject.id not in assignments_by_class_and_subject:
-                        assignments_by_class_and_subject[assignment.subject.id] = []
-                    assignments_by_class_and_subject[assignment.subject.id].append(assignment)
-                print(assignments_by_class_and_subject)
-                context = {
-                    'assigned_class': assigned_class,
-                    'student_profile': student_profile,
-                    'classmates_count': classmates_count,
-                    'female_classmates': female_classmates,
-                    'male_classmates': male_classmates,
-                    'assignments_by_class_and_subject': assignments_by_class_and_subject,
-                    'assignments' : assignments
-                }
-                return render(request, 'customadmin/dashboard/student_dashboard.html', context) 
-            except StudentProfile.DoesNotExist:
-                messages.error(request, "Student profile does not exist!")
-                return redirect('error_page')
+                    if assignment.subject:  # Ensure subject exists
+                        assignments_by_class_and_subject[assignment.subject.id].append(assignment)
+
+            context = {
+                'assigned_class': assigned_class,
+                'student_profile': student_profile,
+                'classmates_count': classmates_count,
+                'female_classmates': female_classmates,
+                'male_classmates': male_classmates,
+                'assignments_by_class_and_subject': assignments_by_class_and_subject,
+                'assignments': assignments
+            }
+            return render(request, 'customadmin/dashboard/student_dashboard.html', context)
+        except StudentProfile.DoesNotExist:
+            messages.error(request, "Student profile does not exist!")
+            return redirect('error_page')
+        
 #-----------------------------------------Teacher Dashboard-------------------------------------
 
 
